@@ -1,0 +1,30 @@
+## -*- Mode: python; py-indent-offset: 2; indent-tabs-mode: nil; coding: utf-8; -*-
+
+import os
+import os.path
+import re
+
+
+def build(bld):
+  module = bld.create_ns3_module('earth', ['core', 'mobility'])
+  module.includes = '.'
+  module.source = [
+    'model/earth.cc',
+    'model/earth-position-helper.cc',
+    'model/earth-position-mobility-model.cc',
+  ]
+
+  headers = bld(features='ns3header')
+  headers.module = 'earth'
+  headers.source = [
+    'model/earth.h',
+    'model/earth-position-helper.h',
+    'model/earth-position-mobility-model.h',
+  ]
+
+  # bld.add_pre_fun(compile_generator)
+
+  #if bld.env['ENABLE_EXAMPLES']:
+  #  bld.recurse('examples')
+
+  # bld.ns3_python_bindings()
