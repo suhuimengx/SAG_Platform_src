@@ -27,6 +27,7 @@
 #include "ns3/sequence-number.h"
 #include "ns3/tcp-option-sack.h"
 #include "ns3/tcp-tx-item.h"
+#include "ns3/scpstp-option-snack.h"
 
 namespace ns3 {
 class Packet;
@@ -407,7 +408,9 @@ public:
    */
   void SetRWndCallback (Callback<uint32_t> rWndCallback);
 
-private:
+  virtual void UpdateSnackedData (const ScpsTpOptionSnack::SnackList &snackList);
+
+protected:
   friend std::ostream & operator<< (std::ostream & os, TcpTxBuffer const & tcpTxBuf);
 
   typedef std::list<TcpTxItem*> PacketList; //!< container for data stored in the buffer
@@ -573,7 +576,7 @@ private:
    * \param t1 first item
    * \param t2 second item
    */
-  void MergeItems (TcpTxItem *t1, TcpTxItem *t2) const;
+  virtual void MergeItems (TcpTxItem *t1, TcpTxItem *t2) const;
 
   /**
    * \brief Split one TcpTxItem

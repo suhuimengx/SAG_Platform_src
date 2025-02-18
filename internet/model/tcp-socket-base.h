@@ -650,7 +650,7 @@ protected:
    *
    * \returns 0 on success, -1 on failure
    */
-  int SetupCallback (void);
+  virtual int SetupCallback (void);
 
   /**
    * \brief Perform the real connection tasks: Send SYN if allowed, RST if invalid
@@ -705,7 +705,7 @@ protected:
    * \param tcpPayloadSize the size of TCP payload
    * \return true if the TCP segment is valid
    */
-  bool IsValidTcpSegment (const SequenceNumber32 seq, const uint32_t tcpHeaderSize,
+  virtual bool IsValidTcpSegment (const SequenceNumber32 seq, const uint32_t tcpHeaderSize,
                           const uint32_t tcpPayloadSize);
 
   /**
@@ -828,7 +828,7 @@ protected:
    * This is a callback function configured to m_endpoint in
    * SetupCallback(), invoked when the endpoint is destroyed.
    */
-  void Destroy (void);
+  virtual void Destroy (void);
 
   /**
    * \brief Kill this socket by zeroing its attributes (IPv6)
@@ -836,12 +836,12 @@ protected:
    * This is a callback function configured to m_endpoint in
    * SetupCallback(), invoked when the endpoint is destroyed.
    */
-  void Destroy6 (void);
+  virtual void Destroy6 (void);
 
   /**
    * \brief Deallocate m_endPoint and m_endPoint6
    */
-  void DeallocateEndPoint (void);
+  virtual void DeallocateEndPoint (void);
 
   /**
    * \brief Received a FIN from peer, notify rx buffer
@@ -854,17 +854,17 @@ protected:
   /**
    * \brief FIN is in sequence, notify app and respond with a FIN
    */
-  void DoPeerClose (void);
+  virtual void DoPeerClose (void);
 
   /**
    * \brief Cancel all timer when endpoint is deleted
    */
-  void CancelAllTimers (void);
+  virtual void CancelAllTimers (void);
 
   /**
    * \brief Move from CLOSING or FIN_WAIT_2 to TIME_WAIT state
    */
-  void TimeWait (void);
+  virtual void TimeWait (void);
 
   // State transition functions
 
@@ -886,7 +886,7 @@ protected:
    * \param fromAddress the source address
    * \param toAddress the destination address
    */
-  void ProcessListen (Ptr<Packet> packet, const TcpHeader& tcpHeader,
+  virtual void ProcessListen (Ptr<Packet> packet, const TcpHeader& tcpHeader,
                       const Address& fromAddress, const Address& toAddress);
 
   /**
@@ -895,7 +895,7 @@ protected:
    * \param packet the packet
    * \param tcpHeader the packet's TCP header
    */
-  void ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader);
+  virtual void ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader);
 
   /**
    * \brief Received a packet upon SYN_RCVD.
@@ -1056,14 +1056,14 @@ protected:
    *
    * \param currentDelivered Currently (S)ACKed bytes
    */
-  void EnterCwr (uint32_t currentDelivered);
+  virtual void EnterCwr (uint32_t currentDelivered);
 
   /**
    * \brief Enter the CA_RECOVERY, and retransmit the head
    *
    * \param currentDelivered Currently (S)ACKed bytes
    */
-  void EnterRecovery (uint32_t currentDelivered);
+  virtual void EnterRecovery (uint32_t currentDelivered);
 
   /**
    * \brief An RTO event happened
@@ -1108,7 +1108,7 @@ protected:
    * \param tcpHeader Header of the segment
    * \param [out] bytesSacked Number of bytes SACKed, or 0
    */
-  void ReadOptions (const TcpHeader &tcpHeader, uint32_t *bytesSacked);
+  virtual void ReadOptions (const TcpHeader &tcpHeader, uint32_t *bytesSacked);
 
   /**
    * \brief Return true if the specified option is enabled

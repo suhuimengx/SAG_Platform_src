@@ -247,7 +247,8 @@ TcpNewReno::GetSsThresh (Ptr<const TcpSocketState> state,
 {
   NS_LOG_FUNCTION (this << state << bytesInFlight);
 
-  return std::max (2 * state->m_segmentSize, bytesInFlight / 2);
+  return std::max (2 * state->m_segmentSize, state->m_cWnd.Get() / 2);
+  
 }
 
 Ptr<TcpCongestionOps>

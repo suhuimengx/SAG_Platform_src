@@ -28,6 +28,7 @@
 #include "ns3/ptr.h"
 #include "ns3/tcp-header.h"
 #include "ns3/tcp-option-sack.h"
+#include "ns3/scpstp-option-snack.h"
 
 namespace ns3 {
 class Packet;
@@ -181,7 +182,23 @@ public:
    */
   bool GotFin () const { return m_gotFin; }
 
-private:
+    /**
+   * \brief Get the snack list()
+   *
+   * The snack list can be empty, and it is updated each time Add or Extract
+   * are called through the private method UpdateSackList.
+   *
+   * \return a list of isolated holes
+   */
+  virtual ScpsTpOptionSnack::SnackList GetSnackList (void) const;
+  /**
+   * \brief Get the size of the snack list
+   *
+   * \return the size of the snack list
+   */
+  virtual uint32_t GetSnackListSize (void) const;
+
+protected:
   /**
    * \brief Update the sack list, with the block seq starting at the beginning
    *
@@ -200,7 +217,7 @@ private:
    * \param head sequence number of the block at the beginning
    * \param tail sequence number of the block at the end
    */
-  void UpdateSackList (const SequenceNumber32 &head, const SequenceNumber32 &tail);
+  virtual void UpdateSackList (const SequenceNumber32 &head, const SequenceNumber32 &tail);
 
   /**
    * \brief Remove old blocks from the sack list
@@ -213,9 +230,11 @@ private:
    *
    * \param seq Last sequence to remove
    */
-  void ClearSackList (const SequenceNumber32 &seq);
+  virtual void ClearSackList (const SequenceNumber32 &seq);
 
   TcpOptionSack::SackList m_sackList; //!< Sack list (updated constantly)
+
+  ScpsTpOptionSnack::SnackList m_snackList; //!< Snack list
 
   /// container for data stored in the buffer
   typedef std::map<SequenceNumber32, Ptr<Packet> >::iterator BufIterator;
