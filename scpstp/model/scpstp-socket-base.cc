@@ -2690,35 +2690,36 @@ ScpsTpSocketBase::ReadOptions (const TcpHeader &tcpHeader, uint32_t *bytesSacked
     {
       m_txBuffer->UpdateSnackedData (snackList_temp);
       NS_LOG_INFO ("SNACK option received");
-
-      /*
-      // 避免过于激进的重传，对重传的包的数量进行限制
-      uint32_t maxSnackRetrnsNum = 5;
-      for (ScpsTpOptionSnack::SnackList::const_iterator i = snackList_temp.begin ();
-           i != snackList_temp.end () && maxSnackRetrnsNum != 0; ++i)
-          {
-            SequenceNumber32 startSeq = i->first;
-            SequenceNumber32 endSeq = i->second;
-            uint32_t maxSizeToSend;
-            //将startSeq到endSeq的数据立即重传
-            
-            for(SequenceNumber32 seq = startSeq; seq < endSeq; seq += m_tcb->m_segmentSize)
+      if(m_delAckTimeout != Seconds(0))
+      {
+        // 在开启delayACK时，强制重传SNACK标记的数据包（CCSDS SNACK部分）
+        // 避免过于激进的重传导致网络拥塞，对重传的包的数量进行限制（maxSnackRetrnsNum）
+        uint32_t maxSnackRetrnsNum = 5;
+        for (ScpsTpOptionSnack::SnackList::const_iterator i = snackList_temp.begin ();
+             i != snackList_temp.end () && maxSnackRetrnsNum != 0; ++i)
             {
-              if(seq + m_tcb->m_segmentSize > endSeq)
+              SequenceNumber32 startSeq = i->first;
+              SequenceNumber32 endSeq = i->second;
+              uint32_t maxSizeToSend;
+              //将startSeq到endSeq的数据立即重传
+              for(SequenceNumber32 seq = startSeq; seq < endSeq && maxSnackRetrnsNum != 0; seq += m_tcb->m_segmentSize)
               {
-                maxSizeToSend = static_cast<uint32_t> (endSeq - seq);
+                if(seq + m_tcb->m_segmentSize > endSeq)
+                {
+                  maxSizeToSend = static_cast<uint32_t> (endSeq - seq);
+                }
+                else
+                {
+                  maxSizeToSend = m_tcb->m_segmentSize;
+                }
+                m_tcb->m_nextTxSequence = seq;
+                uint32_t sz = SendDataPacket (m_tcb->m_nextTxSequence, maxSizeToSend, true);
+                NS_ASSERT (sz > 0);
+                maxSnackRetrnsNum--;
               }
-              else
-              {
-                maxSizeToSend = m_tcb->m_segmentSize;
-              }
-              m_tcb->m_nextTxSequence = seq;
-              uint32_t sz = SendDataPacket (m_tcb->m_nextTxSequence, maxSizeToSend, true);
-              NS_ASSERT (sz > 0);
-              maxSnackRetrnsNum--;
             }
-          }
-      */
+      }
+      
     }
 }
 
@@ -2977,5 +2978,64 @@ ScpsTpSocketBase::SendPendingDataInLimit (bool withAck)
   return nPacketsSent;
 }
 
+void
+ScpsTpSocketBase::EstimateRtt (const TcpHeader& tcpHeader)
+{
+  SequenceNumber32 ackSeq = tcpHeader.GetAckNumber ();
+  Time m = Time (0.0);
+  //SYN包和第一个ACK的包不被delay
+  bool isDelayAck = false; 
+  // An ack has been received, calculate rtt and log this measurement
+  if (!m_history.empty ())
+    {
+      RttHistory& h = m_history.front ();
+      
+      // 判断是否被delay
+      if (ackSeq > SequenceNumber32(m_tcb->m_segmentSize + 1))
+      {
+        isDelayAck = true;
+      }
+
+      if (!h.retx && ackSeq >= (h.seq + SequenceNumber32 (h.count)))
+      { 
+        // 计算原始RTT（含延迟ACK时间）
+        if (m_timestampEnabled && tcpHeader.HasOption (TcpOption::TS))
+        {
+          Ptr<const TcpOptionTS> ts = DynamicCast<const TcpOptionTS> (tcpHeader.GetOption (TcpOption::TS));
+          m = TcpOptionTS::ElapsedTimeFromTsValue (ts->GetEcho ());
+        }
+        else
+        {
+          m = Simulator::Now () - h.time; 
+        }
+
+        // 非SYN包ACK时补偿延迟ACK时间
+        if (isDelayAck) 
+        {
+          Time adjusted = m - m_delAckTimeout;
+          m = (adjusted > Time(0)) ? adjusted : MicroSeconds(1); 
+          NS_LOG_DEBUG("Non-SYN RTT adjusted: raw=" << m + m_delAckTimeout 
+                     << " compensated=" << m);
+        }
+      }
+    }
+
+  while (!m_history.empty ())
+  {
+    RttHistory& h = m_history.front ();
+    if ((h.seq + SequenceNumber32 (h.count)) > ackSeq) break;
+    m_history.pop_front (); 
+  }
+
+  if (!m.IsZero ())
+  {
+    // 更新RTT估计器（使用补偿后的值）
+    m_rtt->Measurement (m); 
+    
+    m_rto = Max (m_rtt->GetEstimate () + Max (m_clockGranularity, m_rtt->GetVariation () * 4), m_minRto);
+    m_tcb->m_lastRtt = m_rtt->GetEstimate ();
+    m_tcb->m_minRtt = std::min (m_tcb->m_lastRtt.Get (), m_tcb->m_minRtt);
+  }
+}
 
 } // namespace ns3

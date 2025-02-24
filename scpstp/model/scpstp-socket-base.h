@@ -409,6 +409,13 @@ protected:
    * \returns the number of packets sent
    */
   uint32_t SendPendingDataInLimit (bool withAck = false);
+
+
+  /**
+   * \brief Take into account the packet for RTT estimation
+   * \param tcpHeader the packet's TCP header
+   */
+  virtual void EstimateRtt (const TcpHeader& tcpHeader);
                           
 private:
 
@@ -422,7 +429,7 @@ protected:
   Time         m_linkOutTimeFrom         {Seconds (0.0)};   //!< Time when the link outage started       
   uint32_t          m_dataRetrCountForLinkOut {0}; //!< Count of remaining data retransmission attempts to enter link outage state
   uint32_t          m_dataRetriesForLinkOut   {0}; //!< Number of data retransmission attempts for link outage state
-
+  ScpsTpOptionSnack::SnackList m_snackList; //!< Snack list
 
 };
 

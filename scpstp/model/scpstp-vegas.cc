@@ -38,7 +38,7 @@ TypeId
 ScpsTpVegas::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::ScpsTpVegas")
-    .SetParent<TcpNewReno> ()
+    .SetParent<ScpsTpNewReno> ()
     .AddConstructor<ScpsTpVegas> ()
     .SetGroupName ("Internet")
     .AddAttribute ("Alpha", "Lower bound of packets in network",
@@ -58,7 +58,7 @@ ScpsTpVegas::GetTypeId (void)
 }
 
 ScpsTpVegas::ScpsTpVegas (void)
-  : TcpNewReno (),
+  : ScpsTpNewReno (),
     m_alpha (2),
     m_beta (4),
     m_gamma (1),
@@ -72,7 +72,7 @@ ScpsTpVegas::ScpsTpVegas (void)
 }
 
 ScpsTpVegas::ScpsTpVegas (const ScpsTpVegas& sock)
-  : TcpNewReno (sock),
+  : ScpsTpNewReno (sock),
     m_alpha (sock.m_alpha),
     m_beta (sock.m_beta),
     m_gamma (sock.m_gamma),
@@ -142,13 +142,22 @@ ScpsTpVegas::CongestionStateSet (Ptr<TcpSocketState> tcb,
                               const TcpSocketState::TcpCongState_t newState)
 {
   NS_LOG_FUNCTION (this << tcb << newState);
-  // 在现在设想的情境下，默认lossType为corruption，在这些状态不会引起其他的拥塞控制，后续在考虑兼容其他
-  if (newState == TcpSocketState::CA_OPEN 
-      || newState == TcpSocketState::CA_RECOVERY 
-      || newState == TcpSocketState::CA_DISORDER 
-      || newState == TcpSocketState::CA_LOSS) 
+  /*
+  if (newState == TcpSocketState::CA_OPEN)
     {
       EnableVegas (tcb);
+    }
+  else
+    {
+      DisableVegas ();
+    }
+      */
+  if (newState == TcpSocketState::CA_OPEN || newState == TcpSocketState::CA_RECOVERY || newState == TcpSocketState::CA_LOSS || newState == TcpSocketState::CA_DISORDER ) 
+    {
+      if(m_doingVegasNow == false)
+      {
+        EnableVegas (tcb);
+      }
     }
   else
     {
@@ -165,7 +174,7 @@ ScpsTpVegas::IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked)
     {
       // If Vegas is not on, we follow NewReno algorithm
       NS_LOG_LOGIC ("Vegas is not turned on, we follow NewReno algorithm.");
-      TcpNewReno::IncreaseWindow (tcb, segmentsAcked);
+      ScpsTpNewReno::IncreaseWindow (tcb, segmentsAcked);
       return;
     }
 
@@ -184,7 +193,7 @@ ScpsTpVegas::IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked)
       if (m_cntRtt <= 2)
         {  // We do not have enough RTT samples, so we should behave like Reno
           NS_LOG_LOGIC ("We do not have enough RTT samples to do Vegas, so we behave like NewReno.");
-          TcpNewReno::IncreaseWindow (tcb, segmentsAcked);
+          ScpsTpNewReno::IncreaseWindow (tcb, segmentsAcked);
         }
       else
         {
@@ -238,7 +247,7 @@ ScpsTpVegas::IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked)
             {     // Slow start mode
               NS_LOG_LOGIC ("We are in slow start and diff < m_gamma, so we "
                             "follow NewReno slow start");
-              TcpNewReno::SlowStart (tcb, segmentsAcked);
+              ScpsTpNewReno::SlowStart (tcb, segmentsAcked);
             }
           else
             {     // Linear increase/decrease mode
@@ -279,7 +288,7 @@ ScpsTpVegas::IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked)
     }
   else if (tcb->m_cWnd < tcb->m_ssThresh)
     {
-      TcpNewReno::SlowStart (tcb, segmentsAcked);
+      ScpsTpNewReno::SlowStart (tcb, segmentsAcked);
     }
 }
 

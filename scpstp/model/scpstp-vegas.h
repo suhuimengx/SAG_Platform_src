@@ -28,6 +28,7 @@
 #define SCPSTPVEGAS_H
 
 #include "ns3/tcp-congestion-ops.h"
+#include "ns3/scpstp-newreno.h"
 
 namespace ns3 {
 
@@ -62,7 +63,7 @@ class TcpSocketState;
  * More information: http://dx.doi.org/10.1109/49.464716
  */
 
-class ScpsTpVegas : public TcpNewReno
+class ScpsTpVegas : public ScpsTpNewReno
 {
 public:
   /**
