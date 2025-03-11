@@ -409,7 +409,8 @@ QuicL4Protocol::SetListener (Ptr<QuicSocketBase> sock)
 {
   NS_LOG_FUNCTION (this);
 
-  if (sock != nullptr and m_quicUdpBindingList.size () == 1)
+  //if (sock != nullptr and m_quicUdpBindingList.size () == 1)
+  if (sock != nullptr)
     {
       m_isServer = true;
       m_quicUdpBindingList.front ()->m_quicSocket = sock;

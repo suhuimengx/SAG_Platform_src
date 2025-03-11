@@ -1017,7 +1017,7 @@ ScpsTpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool w
       NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_CWR_SENT");
       m_tcb->m_ecnState = TcpSocketState::ECN_CWR_SENT;
       // 对ECN的响应已经结束，lossType回到正常状态
-      SetLossType (LossType::Corruption);
+      //SetLossType (LossType::Corruption);
       m_ecnCWRSeq = seq;
       flags |= TcpHeader::CWR;
       NS_LOG_INFO ("CWR flags set");
@@ -1457,7 +1457,7 @@ ScpsTpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
           SendEmptyPacket (TcpHeader::ACK);
         }*/
 
-      //无论是否是乱序包，都按照固定频率发包
+      //无论是否是乱序包，都按照固定频率发ACK包
       if (++m_delAckCount >= m_delAckMaxCount)
       {
         m_delAckEvent.Cancel ();
@@ -1682,12 +1682,7 @@ ScpsTpSocketBase::EnterCwr (uint32_t currentDelivered)
                     << ", ssthresh to " << m_tcb->m_ssThresh
                     << ", recover to " << m_recover);
     }
-  // 回到默认丢失源状态
-  // 如果m_linkCongPersistEvent已经超时，调度一个持续时间为一个RTT的定时器，时间之后，就执行函数SetLossType (ScpsTpSocketBase::Corruption);
-  if(m_lossType == ScpsTpSocketBase::Congestion && !m_linkCongPersistEvent.IsRunning ())
-  {
-    m_linkCongPersistEvent = Simulator::Schedule (m_rtt->GetEstimate (), &ScpsTpSocketBase::SetLossType, this, ScpsTpSocketBase::Corruption);
-  }
+
 }
 
 /* Process the newly received ACK */
@@ -1765,6 +1760,16 @@ ScpsTpSocketBase::ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader)
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_ECE_RCVD");
           //ECN,Set lossType to congestion
           SetLossType (ScpsTpSocketBase::Congestion);
+          // 维持3个(指数退避之前的)RTO的时间为congestion状态,若在此期间没有再次收到ECN Echo，则恢复为corruption状态，收到ECE报文提前结束
+          if(m_lossType == ScpsTpSocketBase::Congestion && !m_linkCongPersistEvent.IsRunning ())
+          {
+            m_linkCongPersistEvent = Simulator::Schedule (3 * m_rto, &ScpsTpSocketBase::SetLossType, this, ScpsTpSocketBase::Corruption);
+          }
+          else if(m_lossType == ScpsTpSocketBase::Congestion && m_linkCongPersistEvent.IsRunning ())
+          {
+            m_linkCongPersistEvent.Cancel ();
+            m_linkCongPersistEvent = Simulator::Schedule (3 * m_rto, &ScpsTpSocketBase::SetLossType, this, ScpsTpSocketBase::Corruption);
+          }
           m_tcb->m_ecnState = TcpSocketState::ECN_ECE_RCVD;
           if (m_tcb->m_congState != TcpSocketState::CA_CWR)
             {
@@ -2473,7 +2478,7 @@ ScpsTpSocketBase::DupAck (uint32_t currentDelivered)
 
               // In limited transmit, cwnd Infl is not updated.
             }
-            */
+        */
         }
     }
 }
@@ -2694,7 +2699,7 @@ ScpsTpSocketBase::ReadOptions (const TcpHeader &tcpHeader, uint32_t *bytesSacked
       {
         // 在开启delayACK时，强制重传SNACK标记的数据包（CCSDS SNACK部分）
         // 避免过于激进的重传导致网络拥塞，对重传的包的数量进行限制（maxSnackRetrnsNum）
-        uint32_t maxSnackRetrnsNum = 5;
+        uint32_t maxSnackRetrnsNum = 999;
         for (ScpsTpOptionSnack::SnackList::const_iterator i = snackList_temp.begin ();
              i != snackList_temp.end () && maxSnackRetrnsNum != 0; ++i)
             {

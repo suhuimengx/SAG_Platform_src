@@ -226,6 +226,7 @@ ScpsTpRxBuffer::UpdateSnackList(void)
 
 
   //调试信息：打印snack list和sack list
+  /*
   NS_LOG_INFO("UpdateSnackList:");
   NS_LOG_INFO("sequence number:" << m_nextRxSeq.Get());
   NS_LOG_INFO("Sack list:");
@@ -237,7 +238,7 @@ ScpsTpRxBuffer::UpdateSnackList(void)
   for (ScpsTpOptionSnack::SnackList::iterator it = m_snackList.begin(); it != m_snackList.end(); ++it)
   {
       NS_LOG_INFO("[" << it->first << ";" << it->second << "]");
-  }
+  }*/
 }
 
 void
@@ -259,7 +260,7 @@ ScpsTpRxBuffer::ClearSnackList(const SequenceNumber32 &seq)
         ++it;
     }
   }
-  
+  /*
   //调试信息：打印snack list和seq
   NS_LOG_INFO("ClearSnackList:");
   NS_LOG_INFO("seq:" << seq);
@@ -267,7 +268,7 @@ ScpsTpRxBuffer::ClearSnackList(const SequenceNumber32 &seq)
   for (ScpsTpOptionSnack::SnackList::iterator it = m_snackList.begin(); it != m_snackList.end(); ++it)
   {
       NS_LOG_INFO("[" << it->first << ";" << it->second << "]");
-  }
+  }*/
 }
 
 } // namespace ns3
