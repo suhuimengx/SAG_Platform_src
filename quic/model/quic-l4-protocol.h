@@ -446,7 +446,8 @@ private:
   // Inherited from IpL4Protocol, not used in this implementation
   IpL4Protocol::DownTargetCallback m_downTarget;
   IpL4Protocol::DownTargetCallback6 m_downTarget6;
-
+  //Mengy's::
+  int m_quicConnectionNum;
 };
 
 } // namespace ns3

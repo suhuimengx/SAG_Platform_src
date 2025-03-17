@@ -157,6 +157,8 @@ QuicL4Protocol::QuicL4Protocol ()
   NS_LOG_LOGIC ("Created QuicL4Protocol object " << this);
 
   m_quicUdpBindingList = QuicUdpBindingList ();
+  //Mengy's::
+  m_quicConnectionNum = 0;
 }
 
 QuicL4Protocol::~QuicL4Protocol ()
@@ -413,8 +415,15 @@ QuicL4Protocol::SetListener (Ptr<QuicSocketBase> sock)
   if (sock != nullptr)
     {
       m_isServer = true;
-      m_quicUdpBindingList.front ()->m_quicSocket = sock;
-      m_quicUdpBindingList.front ()->m_listenerBinding = true;
+      if(m_quicUdpBindingList[0]->m_quicSocket == nullptr)
+      {
+        NS_ASSERT_MSG(0 == 1, "Set Listen Error!");
+      }
+      //Mengy's::
+      uint64_t connectionId = m_quicUdpBindingList.back ()->m_quicSocket->GetConnectionId ();
+      m_quicUdpBindingList.back ()->m_quicSocket->SetConnectionId (connectionId + 100);
+      m_quicUdpBindingList.back ()->m_quicSocket = sock;
+      m_quicUdpBindingList.back ()->m_listenerBinding = true;
       return true;
     }
 
@@ -501,7 +510,8 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
       if (header.IsInitial () and m_isServer and socket == nullptr)
         {
           NS_LOG_LOGIC (this << " Cloning listening socket " << m_quicUdpBindingList.front ()->m_quicSocket);
-          socket = CloneSocket (m_quicUdpBindingList.front ()->m_quicSocket);
+          //Mengy's::
+          socket = CloneSocket (m_quicUdpBindingList[(int)connectionId]->m_quicSocket);
           socket->SetConnectionId (connectionId);
           socket->Connect (from);
           socket->SetupCallback ();
@@ -691,7 +701,7 @@ QuicL4Protocol::CreateSocket (TypeId congestionTypeId)
   uint64_t connectionId;
   while (not found)
     {
-      connectionId = uint64_t (rand->GetValue (0, pow (2, 64) - 1));
+      connectionId = uint64_t (m_quicConnectionNum);
       found = true;
       for (auto it = m_quicUdpBindingList.begin (); it != m_quicUdpBindingList.end (); ++it)
         {
@@ -703,6 +713,8 @@ QuicL4Protocol::CreateSocket (TypeId congestionTypeId)
           found = true;
         }
     }
+  //Mengy's::
+  m_quicConnectionNum++;
   socket->SetConnectionId (connectionId);
   Ptr<QuicUdpBinding> udpBinding = Create<QuicUdpBinding> ();
   udpBinding->m_budpSocket = nullptr;

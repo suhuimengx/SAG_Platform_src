@@ -344,6 +344,21 @@ Packet::AddAtEnd (Ptr<const Packet> packet)
   m_metadata.AddAtEnd (packet->m_metadata);
   m_packetTagList = packet->m_packetTagList;
 }
+
+void 
+Packet::AddAtEndForQuicACK (Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet << packet->GetSize ());
+  m_byteTagList.AddAtEnd (GetSize ());
+  ByteTagList copy = packet->m_byteTagList;
+  copy.AddAtStart (0);
+  copy.Adjust (GetSize ());
+  m_byteTagList.Add (copy);
+  m_buffer.AddAtEnd (packet->m_buffer);
+  m_metadata.AddAtEnd (packet->m_metadata);
+}
+
+
 void
 Packet::AddPaddingAtEnd (uint32_t size)
 {

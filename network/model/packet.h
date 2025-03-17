@@ -395,6 +395,10 @@ public:
    * \param packet packet to concatenate
    */
   void AddAtEnd (Ptr<const Packet> packet);
+
+
+  void AddAtEndForQuicACK (Ptr<const Packet> packet);
+
   /**
    * \brief Add a zero-filled padding to the packet.
    *

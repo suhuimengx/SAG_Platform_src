@@ -1332,7 +1332,7 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
 
   if (withAck && !m_receivedPacketNumbers.empty ())
     {
-      p->AddAtEnd (OnSendingAckFrame ());
+      p->AddAtEndForQuicACK (OnSendingAckFrame ());
     }
 
 
