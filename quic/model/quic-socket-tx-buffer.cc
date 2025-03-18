@@ -338,6 +338,9 @@ Ptr<Packet> QuicSocketTxBuffer::NextSequence (uint32_t numBytes,
       outItem->m_packetNumber = seq;
       outItem->m_lastSent = Now ();
       Ptr<Packet> toRet = outItem->m_packet;
+      //std::cout<<"NextSequence Packet Tags: ";
+      //toRet->PrintPacketTags(std::cout);
+      //std::cout<<std::endl;
       return toRet;
     }
   else
@@ -609,6 +612,20 @@ std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::DetectLostPackets ()
   return lost;
 }
 
+std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::GetAllHandshakePackets ()
+{
+  NS_LOG_FUNCTION (this);
+  std::vector<Ptr<QuicSocketTxItem> > pkts;
+
+  for (auto sent_it = m_sentList.begin ();
+       sent_it != m_sentList.end () and !m_sentList.empty (); ++sent_it)
+    {
+     // (*sent_it)->m_lost = true;
+      pkts.push_back ((*sent_it));
+    }
+  return pkts;
+}
+
 uint32_t QuicSocketTxBuffer::GetLost ()
 {
   NS_LOG_FUNCTION (this);
@@ -860,17 +877,6 @@ void QuicSocketTxBuffer::SetDefaultLatency (Time latency)
 Time QuicSocketTxBuffer::GetDefaultLatency ()
 {
   return GetLatency (0);
-}
-
-std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::GetAllHandshakePackets ()
-{
-  NS_LOG_FUNCTION (this);
-  std::vector<Ptr<QuicSocketTxItem> > pkts;
-  for (auto sent_it = m_sentList.begin (); sent_it != m_sentList.end () and !m_sentList.empty(); ++sent_it)
-    {
-      pkts.push_back ((*sent_it));
-    }
-  return pkts;
 }
 
 }

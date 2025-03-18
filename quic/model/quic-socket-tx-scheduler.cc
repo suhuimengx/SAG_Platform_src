@@ -211,6 +211,7 @@ QuicSocketTxScheduler::GetNewSegment (uint32_t numBytes)
       Ptr<QuicSocketTxScheduleItem> scheduleItem = m_appList.top ();
       currentItem = scheduleItem->GetItem ();
       currentPacket = currentItem->m_packet;
+
       m_appSize -= currentPacket->GetSize ();
       m_appList.pop ();
 
@@ -301,6 +302,7 @@ QuicSocketTxScheduler::GetNewSegment (uint32_t numBytes)
 
               m_appList.push (CreateObject<QuicSocketTxScheduleItem> (scheduleItem->GetStreamId (), scheduleItem->GetOffset (), scheduleItem->GetPriority (), toBeBuffered));
               m_appSize += toBeBuffered->m_packet->GetSize ();
+
 
 
               NS_LOG_LOGIC ("Buffer size: " << m_appSize << " (put back " << toBeBuffered->m_packet->GetSize () << " bytes)");

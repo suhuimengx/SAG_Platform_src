@@ -49,13 +49,18 @@
 #include "quic-congestion-ops.h"
 #include "ns3/rtt-estimator.h"
 #include "ns3/random-variable-stream.h"
-#include "ns3/quic-bbr.h"
+
 #include <vector>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
 #include <math.h>
 #include <iostream>
+//Mengy's::s
+#include "ns3/id_seq_tag.h"
+#include "quic-bbr.h"
+
+
 
 namespace ns3 {
 
@@ -411,19 +416,19 @@ QuicL4Protocol::SetListener (Ptr<QuicSocketBase> sock)
 {
   NS_LOG_FUNCTION (this);
 
-  //if (sock != nullptr and m_quicUdpBindingList.size () == 1)
-  if (sock != nullptr)
+  if (sock != nullptr )
     {
       m_isServer = true;
-      if(m_quicUdpBindingList[0]->m_quicSocket == nullptr)
+      if (m_quicUdpBindingList[0]->m_quicSocket == nullptr)
       {
         NS_ASSERT_MSG(0 == 1, "Set Listen Error!");
       }
       //Mengy's::
-      uint64_t connectionId = m_quicUdpBindingList.back ()->m_quicSocket->GetConnectionId ();
-      m_quicUdpBindingList.back ()->m_quicSocket->SetConnectionId (connectionId + 100);
+      uint64_t connectionId = m_quicUdpBindingList.back ()->m_quicSocket->GetConnectionId();
+      m_quicUdpBindingList.back ()->m_quicSocket->SetConnectionId(connectionId + 100);
       m_quicUdpBindingList.back ()->m_quicSocket = sock;
       m_quicUdpBindingList.back ()->m_listenerBinding = true;
+
       return true;
     }
 
@@ -455,9 +460,14 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
       NS_LOG_INFO ("Receiving packet on UDP socket");
       //packet->Print (std::clog);
       // NS_LOG_INFO ("");
+      //std::cout<<"Start Print Tag!"<<std::endl;
+      //packet->PrintPacketTags (std::cout);
+
 
       QuicHeader header;
       packet->RemoveHeader (header);
+
+      //std::cout<<"Recv Size: "<<packet->GetSize()<<std::endl;
 
       uint64_t connectionId;
       if (header.HasConnectionId ())
@@ -489,14 +499,17 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
 
       QuicUdpBindingList::iterator it;
       Ptr<QuicSocketBase> socket;
+
       for (it = m_quicUdpBindingList.begin (); it != m_quicUdpBindingList.end (); ++it)
         {
-          Ptr<QuicUdpBinding> item = *it;
+          Ptr<QuicUdpBinding> item = *it;;
+
           if (item->m_quicSocket->GetConnectionId () == connectionId)
             {
               socket = item->m_quicSocket;
               break;
             }
+
         }
 
       NS_LOG_LOGIC ((socket == nullptr));
@@ -509,8 +522,8 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
 
       if (header.IsInitial () and m_isServer and socket == nullptr)
         {
-          NS_LOG_LOGIC (this << " Cloning listening socket " << m_quicUdpBindingList.front ()->m_quicSocket);
-          //Mengy's::
+          NS_LOG_LOGIC (this << " Cloning listening socket " << m_quicUdpBindingList[(int)connectionId]->m_quicSocket);
+          std::cout<<"Maybe Error!: Clone Socket: "<<m_quicUdpBindingList[(int)connectionId]->m_quicSocket<<std::endl;
           socket = CloneSocket (m_quicUdpBindingList[(int)connectionId]->m_quicSocket);
           socket->SetConnectionId (connectionId);
           socket->Connect (from);
@@ -701,7 +714,8 @@ QuicL4Protocol::CreateSocket (TypeId congestionTypeId)
   uint64_t connectionId;
   while (not found)
     {
-      connectionId = uint64_t (m_quicConnectionNum);
+      //Mengy's::
+      connectionId = (uint64_t)(m_quicConnectionNum);
       found = true;
       for (auto it = m_quicUdpBindingList.begin (); it != m_quicUdpBindingList.end (); ++it)
         {
@@ -714,13 +728,15 @@ QuicL4Protocol::CreateSocket (TypeId congestionTypeId)
         }
     }
   //Mengy's::
-  m_quicConnectionNum++;
+  m_quicConnectionNum ++;
   socket->SetConnectionId (connectionId);
+  //std::cout<<"My Connection ID: "<<connectionId<<std::endl;
   Ptr<QuicUdpBinding> udpBinding = Create<QuicUdpBinding> ();
   udpBinding->m_budpSocket = nullptr;
   udpBinding->m_budpSocket6 = nullptr;
   udpBinding->m_quicSocket = socket;
   m_quicUdpBindingList.insert (m_quicUdpBindingList.end (), udpBinding);
+  //std::cout<<"My UDPBindListSize: "<<(int)m_quicUdpBindingList.size()<<std::endl;
 
   return socket;
 }
@@ -811,16 +827,28 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
   //packetSent->Print (std::clog);
   // NS_LOG_INFO ("");
 
+  //std::cout<<"Socket "<<socket<<" Send Packet Size: "<<packetSent->GetSize()<<std::endl;
+  bool sendSuccess = false;
   QuicUdpBindingList::const_iterator it;
   for (it = m_quicUdpBindingList.begin (); it != m_quicUdpBindingList.end (); ++it)
     {
       Ptr<QuicUdpBinding> item = *it;
       if (item->m_quicSocket == socket)
         {
-          UdpSend (item->m_budpSocket, packetSent, 0);
+          int error = UdpSend (item->m_budpSocket, packetSent, 0);
+          if(error == -1)
+          {
+            std::cout<<"Udp Send Error!"<<std::endl;
+          }
+          sendSuccess = true;
           break;
         }
     }
+  if(!sendSuccess)
+  {
+    std::cout<<"Send Fail for socket "<<socket<<std::endl;
+  }
+  
 }
 
 

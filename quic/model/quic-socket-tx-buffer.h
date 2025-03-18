@@ -204,6 +204,9 @@ public:
    */
   std::vector<Ptr<QuicSocketTxItem> > DetectLostPackets ();
 
+  //Mengy's::
+  std::vector<Ptr<QuicSocketTxItem> > GetAllHandshakePackets();
+
   /**
    * \brief Count the amount of lost bytes
    *
@@ -348,8 +351,6 @@ public:
    * \return The default maximum latency
    */
   Time GetDefaultLatency ();
-
-  std::vector<Ptr<QuicSocketTxItem> > GetAllHandshakePackets ();
 
 private:
   typedef std::list<Ptr<QuicSocketTxItem> > QuicTxPacketList;      //!< container for data stored in the buffer

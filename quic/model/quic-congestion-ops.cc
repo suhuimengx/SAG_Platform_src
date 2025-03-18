@@ -254,6 +254,7 @@ QuicCongestionOps::OnPacketsLost (
       tcbd->m_cWnd *= tcbd->m_kLossReductionFactor;
       if (tcbd->m_cWnd < tcbd->m_kMinimumWindow)
         {
+          std::cout<<"OnPacketsLost: Reduce to Minimum Window!"<<std::endl;
           tcbd->m_cWnd = tcbd->m_kMinimumWindow;
         }
       tcbd->m_ssThresh = tcbd->m_cWnd;
@@ -268,6 +269,7 @@ QuicCongestionOps::OnRetransmissionTimeoutVerified (
   Ptr<QuicSocketState> tcbd = dynamic_cast<QuicSocketState*> (&(*tcb));
   NS_ASSERT_MSG (tcbd != 0, "tcb is not a QuicSocketState");
   NS_LOG_INFO ("Loss state");
+  std::cout<<"OnRetransmissionTimeoutVerified: Reduce to Minimum Window!"<<std::endl;
   tcbd->m_cWnd = tcbd->m_kMinimumWindow;
   tcbd->m_congState = TcpSocketState::CA_LOSS;
 }

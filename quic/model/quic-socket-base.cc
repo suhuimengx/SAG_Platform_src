@@ -852,7 +852,7 @@ QuicSocketBase::Connect (const Address & address)
     InetSocketAddress::ConvertFrom (address).GetIpv4 ());
 
   if (result != m_quicl4->GetAuthAddresses ().end ()
-      || m_quicl4->Is0RTTHandshakeAllowed ())
+      || m_quicl4->Is0RTTHandshakeAllowed () )
     {
       NS_LOG_INFO (
         "CONNECTION AUTHENTICATED Client found the Server " << InetSocketAddress::ConvertFrom (address).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (address).GetPort () << " in authenticated list");
@@ -877,6 +877,8 @@ QuicSocketBase::Send (Ptr<Packet> p, uint32_t flags)
 {
   NS_LOG_FUNCTION (this << flags);
   int data = 0;
+
+
 
   if (m_drainingPeriodEvent.IsRunning ())
     {
@@ -1115,8 +1117,9 @@ QuicSocketBase::SetSegSize (uint32_t size)
 
   m_tcb->m_segmentSize = size;
   // Update minimum congestion window
-  m_tcb->m_initialCWnd = 2 * size;
-  m_tcb->m_kMinimumWindow = 2 * size;
+  //Mengy's::
+  m_tcb->m_initialCWnd = 60 * size;
+  m_tcb->m_kMinimumWindow = 60 * size;
 }
 
 uint32_t
@@ -1300,9 +1303,30 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
       m_idleTimeoutEvent = Simulator::Schedule (m_idleTimeout,
                                                 &QuicSocketBase::Close, this);
       p = m_txBuffer->NextSequence (maxSize, packetNumber);
+
+        //Mengy's::TODO
+      std::string filePath  =  "/home/liyisen/tarballs/SAG_Platform/data/test_data/results/network_results/object_statistics/SentData_" 
+      +std::to_string(m_node->GetId ()) + "_"+std::to_string(m_connectionId)+".txt";
+      #if 1
+      std::ofstream file(filePath,std::ios::app);
+      if(file.is_open())
+      {
+          file<<(int)p->GetSize()<<","<<Simulator::Now().GetMilliSeconds()<<std::endl;
+      } 
+      file.close();
+      #endif
+
+
     }
 
+    //std::cout<<"Socketbase Packet Tags: ";
+    //p->PrintPacketTags(std::cout);
+    //std::cout<<std::endl;
+
   uint32_t sz = p->GetSize ();
+
+
+
 
   // check whether the connection is appLimited, i.e. not enough data to fill a packet
   if (sz < maxSize and m_txBuffer->AppSize () == 0 and m_tcb->m_bytesInFlight.Get () < m_tcb->m_cWnd)
@@ -1332,8 +1356,13 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
 
   if (withAck && !m_receivedPacketNumbers.empty ())
     {
+      //Mengy's::
       p->AddAtEndForQuicACK (OnSendingAckFrame ());
     }
+
+  //std::cout<<"AddAck Socketbase Packet Tags: ";
+  //p->PrintPacketTags(std::cout);
+  //std::cout<<std::endl;
 
 
   QuicHeader head;
@@ -1463,9 +1492,13 @@ QuicSocketBase::SetReTxTimeout ()
     }
   NS_LOG_INFO ("Schedule ReTxTimeout at time " << Simulator::Now ().GetSeconds () << " to expire at time " << (Simulator::Now () + alarmDuration).GetSeconds ());
   NS_LOG_INFO ("Alarm after " << alarmDuration.GetSeconds () << " seconds");
+
+
   m_tcb->m_lossDetectionAlarm = Simulator::Schedule (alarmDuration,
-                                                     &QuicSocketBase::ReTxTimeout, this);
+                                                    &QuicSocketBase::ReTxTimeout, this);
   m_tcb->m_nextAlarmTrigger = Simulator::Now () + alarmDuration;
+
+
 }
 
 void
@@ -1509,8 +1542,8 @@ QuicSocketBase::ReTxTimeout ()
       //TODO retransmit handshake packets
       //RetransmitAllHandshakePackets();
       m_tcb->m_handshakeCount++;
-      std::cout << "My handshake count: "<< m_tcb->m_handshakeCount << std::endl;
-      if(m_tcb->m_handshakeCount == 1)
+      std::cout<<"My handshake count: "<<m_tcb->m_handshakeCount<<std::endl;
+      if (m_tcb->m_handshakeCount == 1)
       {
         std::vector<Ptr<QuicSocketTxItem> > pkts = m_txBuffer->GetAllHandshakePackets();
         DoRetransmit(pkts);
@@ -2270,6 +2303,18 @@ QuicSocketBase::OnReceivedAckFrame (QuicSubheader &sub)
   // Count newly acked bytes
   uint32_t ackedBytes = previousWindow - m_txBuffer->BytesInFlight ();
 
+  std::string filePath  =  "/home/liyisen/tarballs/SAG_Platform/data/test_data/results/network_results/object_statistics/quicAckBytes_" 
+    +std::to_string(m_node->GetId ()) + "_"+std::to_string(m_connectionId)+".txt";
+  #if 0
+  std::ofstream file(filePath,std::ios::app);
+  if(file.is_open() && m_socketState != CONNECTING_SVR)
+  {
+      file<<ackedBytes<<","<<Simulator::Now().GetMilliSeconds()<<std::endl;
+  } 
+  file.close();
+  #endif
+
+
   m_txBuffer->GenerateRateSample ();
   rs->m_packetLoss = std::abs ((int) lostOut - (int) m_txBuffer->GetLost ());
   m_tcb->m_lastAckedSackedBytes = m_tcb->m_delivered - delivered;
@@ -2290,6 +2335,7 @@ QuicSocketBase::OnReceivedAckFrame (QuicSubheader &sub)
           if (m_quicCongestionControlLegacy && !lostPackets.empty ())
             {
               // Reset congestion window and go into loss mode
+              std::cout<<"RTO reduce to Minimum Window!"<<std::endl;
               m_tcb->m_cWnd = m_tcb->m_kMinimumWindow;
               m_tcb->m_endOfRecovery = m_tcb->m_highTxMark;
               m_tcb->m_ssThresh = m_congestionControl->GetSsThresh (
@@ -2543,6 +2589,7 @@ QuicSocketBase::DoConnect (void)
     {
       SetState (CONNECTING_CLT);
       QuicHeader q;
+      std::cout<<"Send Initial Packet!"<<std::endl;
       SendInitialHandshake (QuicHeader::INITIAL, q, 0);
     }
   return 0;
@@ -2554,12 +2601,11 @@ QuicSocketBase::DoFastConnect (void)
   NS_LOG_FUNCTION (this);
   //NS_ABORT_MSG_IF (!IsVersionSupported (m_vers),
                    //"0RTT Handshake requested with wrong Initial Version");
-
   if(!IsVersionSupported (m_vers))
-    {
-      std::cout << "Todo in Future: 0RTT Handshake requested with wrong Initial Version"  << std::endl;
-      return DoConnect ();
-    }
+  {
+    std::cout<<"Todo in Future: 0RTT Handshake requested with wrong Initial Version"<<std::endl;
+    return DoConnect();
+  }
 
   if (m_socketState != IDLE)
     {
@@ -2591,6 +2637,7 @@ QuicSocketBase::ConnectionSucceeded ()
     {
       NotifySend (GetTxAvailable ());
     }
+  std::cout<<this<<" Connection Succeeded at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
 }
 
 int
@@ -2605,6 +2652,15 @@ QuicSocketBase::DoClose (void)
     }
 
   SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+
+  if(m_socketState == CONNECTING_SVR)
+  {
+    std::cout<<"Server "<<this<<" Closed at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+  }
+  else{
+    std::cout<<"Client "<<this<<" Closed at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+  }
+
   return m_quicl4->RemoveSocket (this);
 }
 
@@ -2615,6 +2671,10 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
   NS_LOG_FUNCTION (this);
 
   m_rxTrace (p, quicHeader, this);
+
+
+
+  //std::cout<<"Quic Socket "<<m_connectionId<<" Received Data "<<p->GetSize ()<<" at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
 
   NS_LOG_INFO ("Received packet of size " << p->GetSize ());
 
@@ -2665,6 +2725,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
   else if (quicHeader.IsInitial () and m_socketState == CONNECTING_SVR)
     {
       NS_LOG_INFO ("Server receives INITIAL");
+      std::cout<<"Server receives INITIAL"<<std::endl;
       if (m_serverBusy)
         {
           AbortConnection (QuicSubheader::TransportErrorCodes_t::SERVER_BUSY,

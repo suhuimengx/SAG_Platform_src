@@ -144,8 +144,12 @@ QuicSocketRxBuffer::Extract (uint32_t maxSize)
 
       if (currentPacket->GetSize () + outPkt->GetSize () <= extractSize)   // Merge
         {
-
+          //std::cout<<"Before: ";
+          //currentPacket->PrintPacketTags (std::cout);
+          //std::cout<<std::endl<<"After ";
           outPkt->AddAtEnd ((*it));
+          //outPkt->PrintPacketTags (std::cout);
+          //std::cout<<std::endl;
           m_socketRecvList.erase (it);
 
           m_recvSize -= (*it)->GetSize ();

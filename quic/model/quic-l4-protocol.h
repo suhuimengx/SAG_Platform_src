@@ -35,6 +35,7 @@
 #include "quic-header.h"
 #include "ns3/socket.h"
 
+
 namespace ns3 {
 
 class QuicSocketBase;
@@ -446,8 +447,10 @@ private:
   // Inherited from IpL4Protocol, not used in this implementation
   IpL4Protocol::DownTargetCallback m_downTarget;
   IpL4Protocol::DownTargetCallback6 m_downTarget6;
+
   //Mengy's::
-  int m_quicConnectionNum;
+  int m_quicConnectionNum ;
+
 };
 
 } // namespace ns3

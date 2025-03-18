@@ -39,6 +39,8 @@
 #include "quic-stream-base.h"
 #include "quic-header.h"
 #include "quic-transport-parameters.h"
+#include <iostream>
+#include <fstream>
 
 namespace ns3 {
 
@@ -260,6 +262,7 @@ QuicStreamBase::SendDataFrame (SequenceNumber32 seq, uint32_t maxSize)
     {
       frame->RemoveHeader (sub);
       m_txBuffer->Rejected (frame);
+      std::cout<<"Rejected"<<std::endl;
       NS_LOG_WARN ("Sending error - could not append packet to socket buffer. Putting packet back in stream buffer");
       m_sentSize -= frame->GetSize ();
     }
@@ -426,6 +429,8 @@ QuicStreamBase::Recv (Ptr<Packet> frame, const QuicSubheader& sub, Address &addr
         }
 
       SetStreamStateRecvIf (m_streamStateRecv == RECV and m_fin, SIZE_KNOWN);
+
+
 
       if (m_recvSize == sub.GetOffset ())
         {
