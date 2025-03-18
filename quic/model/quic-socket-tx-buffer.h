@@ -349,6 +349,8 @@ public:
    */
   Time GetDefaultLatency ();
 
+  std::vector<Ptr<QuicSocketTxItem> > GetAllHandshakePackets ();
+
 private:
   typedef std::list<Ptr<QuicSocketTxItem> > QuicTxPacketList;      //!< container for data stored in the buffer
 

@@ -49,7 +49,7 @@
 #include "quic-congestion-ops.h"
 #include "ns3/rtt-estimator.h"
 #include "ns3/random-variable-stream.h"
-
+#include "ns3/quic-bbr.h"
 #include <vector>
 #include <sstream>
 #include <iomanip>
@@ -131,7 +131,7 @@ QuicL4Protocol::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("SocketType",
                    "Socket type of QUIC objects.",
-                   TypeIdValue (QuicCongestionOps::GetTypeId ()),
+                   TypeIdValue (QuicBbr::GetTypeId ()),
                    MakeTypeIdAccessor (&QuicL4Protocol::m_congestionTypeId),
                    MakeTypeIdChecker ())
     .AddAttribute ("SocketList", "The list of UDP and QUIC sockets associated to this protocol.",

@@ -1509,6 +1509,12 @@ QuicSocketBase::ReTxTimeout ()
       //TODO retransmit handshake packets
       //RetransmitAllHandshakePackets();
       m_tcb->m_handshakeCount++;
+      std::cout << "My handshake count: "<< m_tcb->m_handshakeCount << std::endl;
+      if(m_tcb->m_handshakeCount == 1)
+      {
+        std::vector<Ptr<QuicSocketTxItem> > pkts = m_txBuffer->GetAllHandshakePackets();
+        DoRetransmit(pkts);
+      }
     }
   else if (m_tcb->m_alarmType == 1 && m_tcb->m_lossTime != Seconds (0))
     {
@@ -2546,8 +2552,14 @@ int
 QuicSocketBase::DoFastConnect (void)
 {
   NS_LOG_FUNCTION (this);
-  NS_ABORT_MSG_IF (!IsVersionSupported (m_vers),
-                   "0RTT Handshake requested with wrong Initial Version");
+  //NS_ABORT_MSG_IF (!IsVersionSupported (m_vers),
+                   //"0RTT Handshake requested with wrong Initial Version");
+
+  if(!IsVersionSupported (m_vers))
+    {
+      std::cout << "Todo in Future: 0RTT Handshake requested with wrong Initial Version"  << std::endl;
+      return DoConnect ();
+    }
 
   if (m_socketState != IDLE)
     {

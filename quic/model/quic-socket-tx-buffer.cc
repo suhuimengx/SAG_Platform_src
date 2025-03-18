@@ -862,4 +862,15 @@ Time QuicSocketTxBuffer::GetDefaultLatency ()
   return GetLatency (0);
 }
 
+std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::GetAllHandshakePackets ()
+{
+  NS_LOG_FUNCTION (this);
+  std::vector<Ptr<QuicSocketTxItem> > pkts;
+  for (auto sent_it = m_sentList.begin (); sent_it != m_sentList.end () and !m_sentList.empty(); ++sent_it)
+    {
+      pkts.push_back ((*sent_it));
+    }
+  return pkts;
+}
+
 }
