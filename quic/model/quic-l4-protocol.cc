@@ -181,6 +181,12 @@ QuicL4Protocol::SetNode (Ptr<Node> node)
   m_node = node;
 }
 
+Ptr<Node> 
+QuicL4Protocol::GetNode (void)
+{
+  return m_node;
+}
+
 int
 QuicL4Protocol::UdpBind (Ptr<QuicSocketBase> socket)
 {
@@ -467,6 +473,26 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
       QuicHeader header;
       packet->RemoveHeader (header);
 
+      bool find =false;
+      if(m_isServer)
+      {
+        #if 1
+        std::string filePath = "/home/liyisen/tarballs/SAG_Platform/data/test_data/logs_ns3/QuicL4Recv_"
+        + std::to_string(m_node->GetId()) +"_" + std::to_string(InetSocketAddress::ConvertFrom(from).GetPort()) + ".txt";
+        std::ofstream file(filePath, std::ios::app);
+        if(file.is_open()){
+            file << (int)packet->GetSize() << ","<<Simulator::Now().GetMilliSeconds() << std::endl;
+            file.close();
+        }
+        #endif
+
+        if(m_node->GetId() == 1589 && InetSocketAddress::ConvertFrom(from).GetPort() == 49153)
+        {
+          find = true;
+        }
+      }
+      
+
       //std::cout<<"Recv Size: "<<packet->GetSize()<<std::endl;
 
       uint64_t connectionId;
@@ -497,6 +523,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
                           " if source and destination IP address and port are sufficient to identify a connection");
         }
 
+
       QuicUdpBindingList::iterator it;
       Ptr<QuicSocketBase> socket;
 
@@ -511,6 +538,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
             }
 
         }
+
 
       NS_LOG_LOGIC ((socket == nullptr));
       /*NS_LOG_INFO ("Initial " << header.IsInitial ());
@@ -529,9 +557,18 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
           socket->Connect (from);
           socket->SetupCallback ();
 
+          if(find)
+          {
+            std::cout<<"End Initial"<<std::endl;
+          }
+
         }
       else if (header.IsHandshake () and m_isServer and socket != nullptr)
         {
+          if(find)
+          {
+            std::cout<<"End handshake for Server"<<std::endl;
+          }
           NS_LOG_LOGIC ("CONNECTION AUTHENTICATED - Server authenticated Client " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " <<
                         InetSocketAddress::ConvertFrom (from).GetPort () << "");
           m_authAddresses.push_back (InetSocketAddress::ConvertFrom (from).GetIpv4 ()); //add to the list of authenticated sockets
@@ -544,6 +581,10 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
         }
       else if (header.IsORTT () and m_isServer)
         {
+          if(find)
+          {
+            std::cout<<"End 0RTT for Server"<<std::endl;
+          }
           auto result = std::find (m_authAddresses.begin (), m_authAddresses.end (), InetSocketAddress::ConvertFrom (from).GetIpv4 ());
           // check if a 0-RTT is allowed with this endpoint - or if the attribute m_0RTTHandshakeStart has been forced to be true
           if (result == m_authAddresses.end () && m_0RTTHandshakeStart)
@@ -568,6 +609,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
         }
       else if (header.IsShort ())
         {
+
           auto result = std::find (m_authAddresses.begin (), m_authAddresses.end (), InetSocketAddress::ConvertFrom (from).GetIpv4 ());
 
           if (result == m_authAddresses.end () && m_0RTTHandshakeStart)
@@ -578,9 +620,10 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
             {
               NS_LOG_WARN ( this << " CONNECTION ABORTED: Short Packet from unauthenticated address " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " <<
                             InetSocketAddress::ConvertFrom (from).GetPort ());
-              continue;
+              //continue;
             }
         }
+      
 
       // Handle callback for the correct socket
       if (!m_socketHandlers[socket].IsNull ())
@@ -836,9 +879,16 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
       if (item->m_quicSocket == socket)
         {
           int error = UdpSend (item->m_budpSocket, packetSent, 0);
+
           if(error == -1)
           {
-            std::cout<<"Udp Send Error!"<<std::endl;
+            //std::cout<<"Udp Send Error!"<<std::endl;
+          }
+          else{
+            if(!m_isServer)
+            {
+
+            }
           }
           sendSuccess = true;
           break;

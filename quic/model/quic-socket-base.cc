@@ -878,20 +878,39 @@ QuicSocketBase::Send (Ptr<Packet> p, uint32_t flags)
   NS_LOG_FUNCTION (this << flags);
   int data = 0;
 
+  bool find = false;
+  if(m_quicl4 -> GetNode() -> GetId() ==1586 && m_connectionId == 0 )
+  {
+    find = true;
+  }
 
+
+  if(find)
+  {
+    //std::cout<<"Socketbase::Send is Invoked!"<<std::endl;
+  }
 
   if (m_drainingPeriodEvent.IsRunning ())
     {
       NS_LOG_INFO ("Socket in draining state, cannot send packets");
+      if(find)
+      {
+        std::cout<<"Socket in draining state, cannot send packets"<<std::endl;
+      }
       return 0;
     }
 
   if (flags == 0)
     {
       data = Send (p);
+      std::cout<<"That error"<<std::endl<<std::endl<<std::endl;
     }
   else
     {
+      if(find)
+      {
+        //std::cout<<"QuicL5Protocol Dispatch Send!"<<std::endl;
+      }
       data = m_quicl5->DispatchSend (p, flags);
     }
   return data;
@@ -918,12 +937,22 @@ QuicSocketBase::AppendingTx (Ptr<Packet> frame)
 {
   NS_LOG_FUNCTION (this);
 
+  bool find = false;
+  if(m_quicl4 -> GetNode() -> GetId() ==1586 && m_connectionId == 0 )
+  {
+    find = true;
+  }
+
   if (m_socketState != IDLE)
     {
       bool done = m_txBuffer->Add (frame);
       if (!done)
         {
           NS_LOG_INFO ("Exceeding Socket Tx Buffer Size");
+          if(find)
+          {
+            std::cout<<"Exceeding Socket Tx Buffer Size"<<std::endl;
+          }
           m_errno = ERROR_MSGSIZE;
         }
       else
@@ -939,9 +968,20 @@ QuicSocketBase::AppendingTx (Ptr<Packet> frame)
         {
           if (!m_sendPendingDataEvent.IsRunning ())
             {
+              if(find)
+              {
+                //std::cout<<"Run One Time Sending PEndign Data" <<std::endl; 
+              }
               m_sendPendingDataEvent = Simulator::Schedule (
                 TimeStep (1), &QuicSocketBase::SendPendingData, this,
                 m_connected);
+            }
+            else
+            {
+              if(find)
+              {
+                std::cout<<"SendPendingDataEvent is running??????"<<std::endl;
+              }
             }
         }
       if (done)
@@ -952,6 +992,10 @@ QuicSocketBase::AppendingTx (Ptr<Packet> frame)
     }
   else
     {
+      if(find)
+      {
+        std::cout<<"Sending in state" << QuicStateName[m_socketState]<<std::endl;
+      }
 
       NS_ABORT_MSG ("Sending in state" << QuicStateName[m_socketState]);
       return -1;
@@ -963,14 +1007,40 @@ QuicSocketBase::SendPendingData (bool withAck)
 {
   NS_LOG_FUNCTION (this << withAck);
 
+  bool find = false;
+  if(m_quicl4 -> GetNode() -> GetId() ==1586 && m_connectionId == 0 )
+  {
+    find = true;
+  }
+
+  if (m_socketState == IDLE)
+    {
+      NS_LOG_INFO ("Socket in IDLE state, cannot send packets");
+      if(find)
+      {
+        std::cout<<"Socket in IDLE state, cannot send packets"<<std::endl;
+      }
+      return 0;
+    }
+
+
+
   if (m_txBuffer->AppSize () == 0)
     {
       if (m_closeOnEmpty)
         {
           m_drainingPeriodEvent.Cancel ();
+          if(find)
+          {
+            //std::cout<<"CLT Send Close"<<std::endl;
+          }
           SendConnectionClosePacket (0, "Scheduled connection close - no error");
         }
       NS_LOG_INFO ("Nothing to send");
+      if(find)
+      { 
+        //std::cout<<"Nothing to send"<<std::endl;
+      }
       return false;
     }
 
@@ -1007,6 +1077,10 @@ QuicSocketBase::SendPendingData (bool withAck)
 
       // uint32_t sz =
       SendDataPacket (next, 0, m_queue_ack);
+      if(find)
+      {
+        std::cout<<"CLT Send Stream 0 Data"<<std::endl;
+      }
 
       win = AvailableWindow ();
       connWin = ConnectionWindow ();
@@ -1022,12 +1096,20 @@ QuicSocketBase::SendPendingData (bool withAck)
     }
   uint32_t availableWindow = AvailableWindow ();
 
+  if(find)
+  {
+    //std::cout<<"Available " <<availableWindow<< "My App Size "<<m_txBuffer->AppSize()<<std::endl;
+  }
   while (availableWindow > 0 and m_txBuffer->AppSize () > 0)
     {
       // check draining period
       if (m_drainingPeriodEvent.IsRunning ())
         {
           NS_LOG_INFO ("Draining period: no packets can be sent");
+          if(find)
+          {
+            std::cout<<"Draining period: no packets can be sent"<<std::endl;
+          }
           return false;
         }
 
@@ -1078,8 +1160,16 @@ QuicSocketBase::SendPendingData (bool withAck)
                                    << " BufferedSize " << m_txBuffer->AppSize ()
                                    << " MaxPacketSize " << GetSegSize ());
 
-      // uint32_t sz =
+       //uint32_t sz =
       SendDataPacket (next, s, withAck);
+      if (find)
+      {
+        //std::cout<<"CLT Send Data"<<sz<<std::endl;
+      }
+      {
+        /* code */
+      }
+      
 
       win = AvailableWindow ();
       connWin = ConnectionWindow ();
@@ -1118,8 +1208,8 @@ QuicSocketBase::SetSegSize (uint32_t size)
   m_tcb->m_segmentSize = size;
   // Update minimum congestion window
   //Mengy's::
-  m_tcb->m_initialCWnd = 60 * size;
-  m_tcb->m_kMinimumWindow = 60 * size;
+  m_tcb->m_initialCWnd = 20 * size;
+  m_tcb->m_kMinimumWindow = 20 * size;
 }
 
 uint32_t
@@ -1725,6 +1815,10 @@ QuicSocketBase::ScheduleCloseAndSendConnectionClosePacket ()
   m_drainingPeriodEvent.Cancel ();
   NS_LOG_LOGIC (this << " Close Schedule DoClose at time " << Simulator::Now ().GetSeconds () << " to expire at time " << (Simulator::Now () + m_drainingPeriodTimeout.Get ()).GetSeconds ());
   m_drainingPeriodEvent = Simulator::Schedule (m_drainingPeriodTimeout, &QuicSocketBase::DoClose, this);
+  if(m_quicl4->GetNode()->GetId() == 1589 && m_connectionId == 0)
+  {
+    std::cout<<"Close at time "<<Simulator::Now().GetSeconds()<<std::endl;
+  }
   SendConnectionClosePacket (0, "Scheduled connection close - no error");
 }
 
@@ -1736,6 +1830,11 @@ QuicSocketBase::Close (void)
   NS_LOG_INFO (this << " Close at time " << Simulator::Now ().GetSeconds ());
 
   m_receivedTransportParameters = false;
+
+  if(m_quicl4->GetNode()->GetId() == 1589 && m_connectionId == 0)
+  {
+    std::cout<<"Close at time "<<Simulator::Now().GetSeconds()<<std::endl;
+  }
 
   if (m_idleTimeoutEvent.IsRunning () and m_socketState != IDLE
       and m_socketState != CLOSING)   //Connection Close from application signal
@@ -1760,6 +1859,10 @@ QuicSocketBase::Close (void)
       m_drainingPeriodEvent = Simulator::Schedule (m_drainingPeriodTimeout,
                                                    &QuicSocketBase::DoClose,
                                                    this);
+      if(m_quicl4->GetNode()->GetId() == 1589 && m_connectionId == 0)
+      {
+        std::cout<<"Close at time "<<Simulator::Now().GetSeconds()<<std::endl;
+      }
     }
   else if (m_idleTimeoutEvent.IsExpired ()
            and m_drainingPeriodEvent.IsExpired () and m_socketState != CLOSING
@@ -2476,7 +2579,8 @@ QuicSocketBase::OnReceivedTransportParameters (
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_receivedTransportParameters)
+  //Mengy's::0319
+  if (m_receivedTransportParameters && 0)
     {
       AbortConnection (
         QuicSubheader::TransportErrorCodes_t::TRANSPORT_PARAMETER_ERROR,
@@ -2637,7 +2741,7 @@ QuicSocketBase::ConnectionSucceeded ()
     {
       NotifySend (GetTxAvailable ());
     }
-  std::cout<<this<<" Connection Succeeded at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+  //std::cout<<this<<" Connection Succeeded at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
 }
 
 int
@@ -2645,6 +2749,16 @@ QuicSocketBase::DoClose (void)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO (this << " DoClose at time " << Simulator::Now ().GetSeconds ());
+
+  bool find = false;
+  if(m_quicl4->GetNode()->GetId() == 1589 && m_connectionId == 0)
+  {
+    find = true;
+    if(find)
+    {
+      std::cout<<" DoClose at time " << Simulator::Now ().GetSeconds ()<<std::endl;
+    }
+  }
 
   if (m_socketState != IDLE)
     {
@@ -2672,6 +2786,16 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
 
   m_rxTrace (p, quicHeader, this);
 
+  bool find = false;
+  if(m_quicl4->GetNode()->GetId() == 1589 && m_connectionId == 0)
+  {
+    find = true;
+    if(find)
+    {
+      //std::cout<<"Quic Socket "<<m_connectionId<<" Received Data "<<p->GetSize ()<<" at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+    }
+  }
+
 
 
   //std::cout<<"Quic Socket "<<m_connectionId<<" Received Data "<<p->GetSize ()<<" at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
@@ -2684,11 +2808,16 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
       m_idleTimeoutEvent.Cancel ();   // reset the IDLE timeout
       NS_LOG_LOGIC (
         this << " ReceivedData Schedule Close at time " << Simulator::Now ().GetSeconds () << " to expire at time " << (Simulator::Now () + m_idleTimeout.Get ()).GetSeconds ());
-      m_idleTimeoutEvent = Simulator::Schedule (m_idleTimeout,
+
+        m_idleTimeoutEvent = Simulator::Schedule (m_idleTimeout,
                                                 &QuicSocketBase::Close, this);
     }
   else   // If the socket is in Draining Period, discard the packets
     {
+      if(find)
+      {
+        //std::cout<<"Error Return"<<std::endl;
+      }
       return;
     }
 
@@ -2697,6 +2826,10 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
 
   if (quicHeader.IsORTT () and m_socketState == LISTENING)
     {
+      if(find)
+      {
+        std::cout<<"0-Rtt>>>"<<std::endl;
+      }
 
       if (m_serverBusy)
         {
@@ -2725,7 +2858,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
   else if (quicHeader.IsInitial () and m_socketState == CONNECTING_SVR)
     {
       NS_LOG_INFO ("Server receives INITIAL");
-      std::cout<<"Server receives INITIAL"<<std::endl;
+      //std::cout<<"Server receives INITIAL"<<std::endl;
       if (m_serverBusy)
         {
           AbortConnection (QuicSubheader::TransportErrorCodes_t::SERVER_BUSY,
@@ -2780,6 +2913,10 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
   else if (quicHeader.IsHandshake () and m_socketState == CONNECTING_SVR)
     {
       NS_LOG_INFO ("Server receives HANDSHAKE");
+      if(find)
+      {
+        std::cout<<"Server receives HANDSHAKE"<<std::endl;
+      }
 
       onlyAckFrames = m_quicl5->DispatchRecv (p, address);
       m_receivedPacketNumbers.push_back (quicHeader.GetPacketNumber ());
@@ -2849,6 +2986,16 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
       // check if delayed ACK is used
       m_receivedPacketNumbers.push_back (quicHeader.GetPacketNumber ());
       onlyAckFrames = m_quicl5->DispatchRecv (p, address);
+      if(find)
+      {
+        if(onlyAckFrames)
+        {
+          //std::cout<<"Short Packet with only ACK Frame!"<<std::endl;
+        }
+        else{
+          //std::cout<<"Short Packet with Data!"<<std::endl;
+        }
+      }
 
     }
   else if (m_socketState == CLOSING)
@@ -2860,7 +3007,10 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
     }
   else
     {
-
+      if(find)
+      {
+        std::cout<<"Error: Received packet in unfeasible state"<<std::endl;
+      }
       return;
     }
 
@@ -2872,6 +3022,10 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
       NS_LOG_DEBUG ("Call MaybeQueueAck");
       MaybeQueueAck ();
     }
+  else if(onlyAckFrames == 1)
+  {
+    std::cout<<"Only ACK but not queueACK"<<std::endl;
+  }
 
 }
 

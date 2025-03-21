@@ -620,7 +620,7 @@ std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::GetAllHandshakePackets (
   for (auto sent_it = m_sentList.begin ();
        sent_it != m_sentList.end () and !m_sentList.empty (); ++sent_it)
     {
-     // (*sent_it)->m_lost = true;
+      (*sent_it)->m_lost = true;
       pkts.push_back ((*sent_it));
     }
   return pkts;

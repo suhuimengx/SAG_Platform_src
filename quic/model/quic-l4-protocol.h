@@ -107,6 +107,8 @@ public:
    */
   void SetNode (Ptr<Node> node);
 
+  Ptr<Node> GetNode (void);
+
   /**
    * \brief Create a QUIC socket using the TypeId set by SocketType attribute
    *
