@@ -194,6 +194,9 @@ public:
 
   virtual ~QuicSocketBase (void);
 
+    //Mengy's::
+    Ipv4EndPoint* GetEndPoint () ;
+
   /**
    * \brief Install a congestion control algorithm on this socket
    *
@@ -738,6 +741,8 @@ protected:
    * the DoClose method
    */
   void ScheduleCloseAndSendConnectionClosePacket ();
+
+
 
 
   // Connections to other layers of the Stack

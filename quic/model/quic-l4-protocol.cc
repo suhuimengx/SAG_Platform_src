@@ -136,7 +136,7 @@ QuicL4Protocol::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("SocketType",
                    "Socket type of QUIC objects.",
-                   TypeIdValue (QuicBbr::GetTypeId ()),
+                   TypeIdValue (TcpNewReno::GetTypeId ()),
                    MakeTypeIdAccessor (&QuicL4Protocol::m_congestionTypeId),
                    MakeTypeIdChecker ())
     .AddAttribute ("SocketList", "The list of UDP and QUIC sockets associated to this protocol.",
@@ -551,7 +551,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
       if (header.IsInitial () and m_isServer and socket == nullptr)
         {
           NS_LOG_LOGIC (this << " Cloning listening socket " << m_quicUdpBindingList[(int)connectionId]->m_quicSocket);
-          std::cout<<"Maybe Error!: Clone Socket: "<<m_quicUdpBindingList[(int)connectionId]->m_quicSocket<<std::endl;
+          std::cout<<"Succeed in Cloning Socket: "<<m_quicUdpBindingList[(int)connectionId]->m_quicSocket<<std::endl;
           socket = CloneSocket (m_quicUdpBindingList[(int)connectionId]->m_quicSocket);
           socket->SetConnectionId (connectionId);
           socket->Connect (from);
@@ -882,11 +882,21 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
 
           if(error == -1)
           {
-            //std::cout<<"Udp Send Error!"<<std::endl;
+            std::cout<<"udp send Error! Packet Size: "<<(int)packetSent->GetSize ()<<std::endl;
+            NS_ASSERT_MSG(0==1,"udp send Error!");
           }
           else{
             if(!m_isServer)
             {
+              #if 1
+              std::string filePath = "/home/liyisen/tarballs/SAG_Platform/data/test_data/logs_ns3/QuicL4Send_"+std::to_string(m_node->GetId())+"_"
+              + std::to_string(socket->GetEndPoint()->GetLocalPort())  + ".txt";
+              std::ofstream file(filePath, std::ios::app);
+              if(file.is_open()){
+                  file << (int)packetSent->GetSize() << ","<<Simulator::Now().GetMilliSeconds() << std::endl;
+                  file.close();
+              }
+              #endif
 
             }
           }

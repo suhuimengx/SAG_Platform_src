@@ -314,6 +314,10 @@ QuicSocketTxScheduler::GetNewSegment (uint32_t numBytes)
   NS_LOG_INFO ("Update: remaining App Size " << m_appSize << ", object size " << outItemSize);
 
   //Print(std::cout);
+  if(outItem->m_packet->GetSize() > 40000)
+  {
+    std::cout<<"OutItemSize: "<<outItem->m_packet->GetSize()<<" NumBytes: "<<numBytes<<std::endl;  
+  }
 
   return outItem;
 }

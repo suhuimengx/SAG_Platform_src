@@ -223,6 +223,11 @@ QuicL5Protocol::DispatchSend (Ptr<Packet> data, uint64_t streamId)
   stream = SearchStream (streamId);
   int sentData = 0;
 
+  if(streamId == 0)
+    {
+      std::cout<<"Append Stream 0 Data At Time "<<Simulator::Now().GetSeconds()<<std::endl;
+    }
+
   if (stream->GetStreamDirectionType () == QuicStream::SENDER
       or stream->GetStreamDirectionType () == QuicStream::BIDIRECTIONAL)
     {

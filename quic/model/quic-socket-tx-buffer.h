@@ -251,6 +251,8 @@ public:
    */
   Ptr<Packet> NextStream0Sequence (const SequenceNumber32 seq);
 
+  void CheckSentListLost();
+
   /**
    * \brief Reset the sent list
    *

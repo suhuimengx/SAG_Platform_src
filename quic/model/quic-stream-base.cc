@@ -262,7 +262,6 @@ QuicStreamBase::SendDataFrame (SequenceNumber32 seq, uint32_t maxSize)
     {
       frame->RemoveHeader (sub);
       m_txBuffer->Rejected (frame);
-      std::cout<<"Rejected"<<std::endl;
       NS_LOG_WARN ("Sending error - could not append packet to socket buffer. Putting packet back in stream buffer");
       m_sentSize -= frame->GetSize ();
     }
@@ -492,7 +491,7 @@ QuicStreamBase::Recv (Ptr<Packet> frame, const QuicSubheader& sub, Address &addr
               // Insert failed: No data or RX buffer full
               NS_LOG_INFO ("Dropping packet due to full RX buffer");
               // Abort simulation!
-              NS_ABORT_MSG ("Aborting Connection");
+              NS_ABORT_MSG ("Buffer is Full! Aborting Connection");
             }
         }
 
