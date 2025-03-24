@@ -416,6 +416,10 @@ protected:
    * \param tcpHeader the packet's TCP header
    */
   virtual void EstimateRtt (const TcpHeader& tcpHeader);
+
+  void AddOptionScpsCapabilities (TcpHeader& header, bool m_snackEnabled);
+
+  void AddOptionMSS (TcpHeader& header);
                           
 private:
 
@@ -430,6 +434,7 @@ protected:
   uint32_t          m_dataRetrCountForLinkOut {0}; //!< Count of remaining data retransmission attempts to enter link outage state
   uint32_t          m_dataRetriesForLinkOut   {0}; //!< Number of data retransmission attempts for link outage state
   ScpsTpOptionSnack::SnackList m_snackList; //!< Snack list
+  bool m_snackEnabled;                       //!< true if the SNACK option is enabled
 
 };
 

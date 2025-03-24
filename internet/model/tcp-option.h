@@ -61,6 +61,7 @@ public:
     SACKPERMITTED = 4,          //!< SACKPERMITTED
     SACK = 5,                   //!< SACK
     TS = 8,                     //!< TS
+    SCPSCAPABILITIES = 20,      //!< SCPSCAPABILITIES
     SNACK = 21,                 //!< SNACK
     UNKNOWN = 255               //!< not a standardized value; for unknown recv'd options
   };

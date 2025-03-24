@@ -63,7 +63,8 @@
 #include "scpstp-rx-buffer.h"
 #include "scpstp-tx-buffer.h"
 #include "ns3/scpstp-option-snack.h"
-
+#include "ns3/scps-option-capabilities.h"
+#include "ns3/tcp-option-rfc793.h"
 #include <math.h>
 #include <algorithm>
 
@@ -86,6 +87,11 @@ ScpsTpSocketBase::GetTypeId(void)
                   MakeEnumChecker(LossType::Corruption, "Corruption",
                                   LossType::Congestion, "Congestion",
                                   LossType::Link_Outage, "Link_Outage"))
+    .AddAttribute("Snack",
+                  "Enable the SNACK option",
+                  BooleanValue(true),
+                  MakeBooleanAccessor(&ScpsTpSocketBase::m_snackEnabled),
+                  MakeBooleanChecker())
     .AddAttribute("LinkOutPersistTimeout",
                   "Persist timeout to probe for link state",
                   TimeValue(Seconds(2)),
@@ -182,7 +188,8 @@ ScpsTpSocketBase::ScpsTpSocketBase(const ScpsTpSocketBase &sock)
     m_scpstp (sock.m_scpstp),
     m_isCorruptionRecovery (sock.m_isCorruptionRecovery),
     m_linkOutPersistTimeout(sock.m_linkOutPersistTimeout),
-    m_dataRetriesForLinkOut(sock.m_dataRetriesForLinkOut)
+    m_dataRetriesForLinkOut(sock.m_dataRetriesForLinkOut),
+    m_snackEnabled (sock.m_snackEnabled)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_LOGIC ("Invoked the copy constructor");
@@ -582,6 +589,23 @@ ScpsTpSocketBase::DoForwardUp (Ptr<Packet> packet, const Address &fromAddress,
           m_txBuffer->SetSackEnabled (false);
         }
 
+      if(tcpHeader.HasOption (TcpOption::SCPSCAPABILITIES))
+      {
+        std::cout << m_node->GetId()<<"Received SCPSCAPABILITIES" << std::endl;
+        Ptr<const ScpsOptionCapabilities> s = DynamicCast<const ScpsOptionCapabilities> (tcpHeader.GetOption (TcpOption::SCPSCAPABILITIES));
+        if(m_snackEnabled)
+        {
+          NS_ASSERT (s->GetSnackEnabled ());
+        }
+        else
+        {
+          NS_ASSERT (!s->GetSnackEnabled ());
+        }
+      }
+      else
+      {
+        //std::cout << m_node->GetId()<<"Not Received SCPSCAPABILITIES" << std::endl;
+      }
       // When receiving a <SYN> or <SYN-ACK> we should adapt TS to the other end
       if (tcpHeader.HasOption (TcpOption::TS) && m_timestampEnabled)
         {
@@ -787,6 +811,8 @@ ScpsTpSocketBase::SendEmptyPacket (uint8_t flags)
   bool isAck = flags == TcpHeader::ACK;
   if (hasSyn)
     {
+
+
       if (m_winScalingEnabled)
         { // The window scaling option is set only on SYN packets
           AddOptionWScale (header);
@@ -796,6 +822,9 @@ ScpsTpSocketBase::SendEmptyPacket (uint8_t flags)
         {
           AddOptionSackPermitted (header);
         }
+
+      AddOptionMSS (header);
+      AddOptionScpsCapabilities (header, m_snackEnabled);
 
       if (m_synCount == 0)
         { // No more connection retries, give up
@@ -3040,6 +3069,32 @@ ScpsTpSocketBase::EstimateRtt (const TcpHeader& tcpHeader)
     m_rto = Max (m_rtt->GetEstimate () + Max (m_clockGranularity, m_rtt->GetVariation () * 4), m_minRto);
     m_tcb->m_lastRtt = m_rtt->GetEstimate ();
     m_tcb->m_minRtt = std::min (m_tcb->m_lastRtt.Get (), m_tcb->m_minRtt);
+  }
+}
+
+
+void ScpsTpSocketBase::AddOptionScpsCapabilities(TcpHeader &header, bool m_snackEnabled)
+{
+  NS_LOG_FUNCTION (this << header);
+  Ptr<ScpsOptionCapabilities> option = Create<ScpsOptionCapabilities> ();
+  option->SetSnackEnabled (m_snackEnabled);
+  if(!header.AppendOption (option))
+  {
+    NS_LOG_WARN ("Failed to add SCPS Capabilities option");
+  }
+
+  NS_LOG_INFO (m_node->GetId () << " Add option SCPS Capabilities ");
+
+}
+
+void ScpsTpSocketBase::AddOptionMSS(TcpHeader &header)
+{
+  NS_LOG_FUNCTION (this << header);
+  Ptr<TcpOptionMSS> option = Create<TcpOptionMSS> ();
+  option->SetMSS (m_tcb->m_segmentSize);
+  if(!header.AppendOption (option))
+  {
+    NS_LOG_WARN ("Failed to add MSS option");
   }
 }
 
