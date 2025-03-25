@@ -133,13 +133,14 @@ QuicSocketBase::GetTypeId (void)
                    MakeUintegerAccessor (&QuicSocketBase::GetSegSize,
                                          &QuicSocketBase::SetSegSize),
                    MakeUintegerChecker<uint16_t> ())
+    //Mengy's::buffer
     .AddAttribute ("SocketSndBufSize", "QuicSocketBase maximum transmit buffer size (bytes)",
-                   UintegerValue (131072),                                  // 128k
+                   UintegerValue (33554432),                                  // 128k
                    MakeUintegerAccessor (&QuicSocketBase::GetSocketSndBufSize,
                                          &QuicSocketBase::SetSocketSndBufSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("SocketRcvBufSize", "QuicSocketBase maximum receive buffer size (bytes)",
-                   UintegerValue (131072),                                  // 128k
+                   UintegerValue (33554432),                                  // 128k
                    MakeUintegerAccessor (&QuicSocketBase::GetSocketRcvBufSize,
                                          &QuicSocketBase::SetSocketRcvBufSize),
                    MakeUintegerChecker<uint32_t> ())
@@ -1396,7 +1397,7 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
           std::cout<<"Client Stream 0 Error!"<<std::endl;
         }
       }
-      std::cout<<"Send Stream 0"<<std::endl;
+      //std::cout<<"Send Stream 0"<<std::endl;
       m_txBuffer->CheckSentListLost();
       NS_ABORT_MSG_IF (p == 0, "No packet for stream 0 in the buffer!");
     }
@@ -1645,7 +1646,7 @@ QuicSocketBase::DoRetransmit (std::vector<Ptr<QuicSocketTxItem> > lostPackets)
     if (item->m_lost)
       {
         lostData += item->m_packet->GetSize ();
-        std::cout<<"Lost Packet Size: "<<item->m_packet->GetSize ()<<std::endl;
+        //std::cout<<"Lost Packet Size: "<<item->m_packet->GetSize ()<<std::endl;
         if(item->m_isStream0)
         {
           stream0LostNum++;
@@ -2564,7 +2565,7 @@ QuicSocketBase::OnReceivedAckFrame (QuicSubheader &sub)
           DynamicCast<QuicCongestionOps> (m_congestionControl)->OnPacketsLost (
             m_tcb, lostPackets);
         }
-      std::cout<<"ACK Retransmission"<<std::endl;
+      std::cout<<"ACK Retransmission Size: "<<(int)lostPackets.size()<<std::endl;
       DoRetransmit (lostPackets);
     }
   /* else */ if (ackedBytes > 0)

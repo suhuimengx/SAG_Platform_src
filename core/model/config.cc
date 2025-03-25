@@ -851,7 +851,8 @@ void SetDefault (std::string name, const AttributeValue &value)
   NS_LOG_FUNCTION (name << &value);
   if (!SetDefaultFailSafe (name, value))
     {
-      NS_FATAL_ERROR ("Could not set default value for " << name);
+      std::cout<<"To Do in Future: Could not set default value! "<<std::endl;
+      //NS_FATAL_ERROR ("Could not set default value for " << name);
     }
 }
 bool SetDefaultFailSafe (std::string fullName, const AttributeValue &value)

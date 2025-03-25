@@ -497,7 +497,6 @@ std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::OnAckUpdate (
         {
           if (!(*sent_it)->m_sacked)
             {
-              std::cout<<"111"<<std::endl;
               (*sent_it)->m_lost = true;
               NS_LOG_LOGIC (
                 "Packet " << (*sent_it)->m_packetNumber << " lost");
@@ -518,7 +517,6 @@ std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::OnAckUpdate (
               if (largestAcknowledged - (*sent_it)->m_packetNumber.GetValue ()
                   >= tcbd->m_kReorderingThreshold)
                 {
-                  std::cout<<"222"<<std::endl;
                   (*sent_it)->m_lost = true;
                   lost = true;
                   NS_LOG_INFO (
@@ -535,7 +533,6 @@ std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::OnAckUpdate (
                     {
                       NS_LOG_UNCOND (
                         "Largest ACK " << largestAcknowledged << ", lost packet " << (*sent_it)->m_packetNumber.GetValue () << " - time " << rhsComparison);
-                        std::cout<<"333"<<std::endl;
                       (*sent_it)->m_lost = true;
                       lost = true;
                     }
@@ -559,7 +556,7 @@ void QuicSocketTxBuffer::ResetSentList (uint32_t keepItems)
     {
       if (kept >= keepItems && !(*sent_it)->m_sacked)
         {
-          std::cout<<"444"<<std::endl;
+          
           (*sent_it)->m_lost = true;
         }
     }

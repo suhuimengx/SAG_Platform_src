@@ -136,7 +136,7 @@ QuicL4Protocol::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("SocketType",
                    "Socket type of QUIC objects.",
-                   TypeIdValue (TcpNewReno::GetTypeId ()),
+                   TypeIdValue (QuicBbr::GetTypeId ()),
                    MakeTypeIdAccessor (&QuicL4Protocol::m_congestionTypeId),
                    MakeTypeIdChecker ())
     .AddAttribute ("SocketList", "The list of UDP and QUIC sockets associated to this protocol.",

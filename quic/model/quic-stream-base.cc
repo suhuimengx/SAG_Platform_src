@@ -55,14 +55,15 @@ QuicStreamBase::GetTypeId (void)
     .SetParent<QuicStream> ()
     .SetGroupName ("Internet")
     .AddConstructor<QuicStreamBase> ()
+    //Mengy's::buffer size
     .AddAttribute ("StreamSndBufSize",
                    "QuicStreamBase maximum transmit buffer size (bytes)",
-                   UintegerValue (131072), // 128k
+                   UintegerValue (33554432), // 128k
                    MakeUintegerAccessor (&QuicStreamBase::m_streamTxBufferSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("StreamRcvBufSize",
                    "QuicStreamBase maximum receive buffer size (bytes)",
-                   UintegerValue (131072), // 128k
+                   UintegerValue (33554432), // 128k
                    MakeUintegerAccessor (&QuicStreamBase::m_streamRxBufferSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("MaxDataInterval",
@@ -486,6 +487,8 @@ QuicStreamBase::Recv (Ptr<Packet> frame, const QuicSubheader& sub, Address &addr
               NS_LOG_LOGIC ("Received window set to offset " << sub.GetMaxStreamData ());
             }
           NS_LOG_INFO ("Buffering unordered received frame - offset " << m_recvSize << ", frame offset " << sub.GetOffset ());
+          std::cout<<"My Available Buffer: "<<m_rxBuffer->Available()<<std::endl;
+          
           if (!m_rxBuffer->Add (frame, sub) && frame->GetSize () > 0)
             {
               // Insert failed: No data or RX buffer full
