@@ -1195,8 +1195,8 @@ QuicSocketBase::SetSegSize (uint32_t size)
   m_tcb->m_segmentSize = size;
   // Update minimum congestion window
   //Mengy's::
-  m_tcb->m_initialCWnd = 400 * size;
-  m_tcb->m_kMinimumWindow = 400 * size;
+  m_tcb->m_initialCWnd = 200 * size;
+  m_tcb->m_kMinimumWindow = 200 * size;
 }
 
 uint32_t
