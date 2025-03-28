@@ -469,17 +469,17 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
       //std::cout<<"Start Print Tag!"<<std::endl;
       //packet->PrintPacketTags (std::cout);
 
-      std::cout<<"Recv Time: "<<Simulator::Now().GetMilliSeconds()<<std::endl;
-      std::cout<<"Origin Recv Packet Size: "<<packet->GetSize()<<std::endl;
+      //std::cout<<"Recv Time: "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+      //std::cout<<"Origin Recv Packet Size: "<<packet->GetSize()<<std::endl;
       QuicHeader header;
       packet->RemoveHeader (header);
-      std::cout<<"Quic Header Num: "<<header.GetPacketNumber()<<std::endl;
+      //std::cout<<"Quic Header Num: "<<header.GetPacketNumber()<<std::endl;
       bool found = false;
       if(header.GetPacketNumber() == SequenceNumber32(1787))
       {
         found = true;
       }
-      std::cout<<"Quic Header Removed Recv Packet Size: "<<packet->GetSize()<<std::endl;
+      //std::cout<<"Quic Header Removed Recv Packet Size: "<<packet->GetSize()<<std::endl;
 
       bool find =false;
       if(m_isServer)
@@ -560,7 +560,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
       if (header.IsInitial () and m_isServer and socket == nullptr)
         {
           NS_LOG_LOGIC (this << " Cloning listening socket " << m_quicUdpBindingList[(int)connectionId]->m_quicSocket);
-          std::cout<<"Succeed in Cloning Socket: "<<m_quicUdpBindingList[(int)connectionId]->m_quicSocket<<std::endl;
+          //std::cout<<"Succeed in Cloning Socket: "<<m_quicUdpBindingList[(int)connectionId]->m_quicSocket<<std::endl;
           socket = CloneSocket (m_quicUdpBindingList[(int)connectionId]->m_quicSocket);
           socket->SetConnectionId (connectionId);
           socket->Connect (from);
@@ -568,7 +568,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
 
           if(find)
           {
-            std::cout<<"End Initial"<<std::endl;
+            //std::cout<<"End Initial"<<std::endl;
           }
 
         }
@@ -576,7 +576,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
         {
           if(find)
           {
-            std::cout<<"End handshake for Server"<<std::endl;
+            //std::cout<<"End handshake for Server"<<std::endl;
           }
           NS_LOG_LOGIC ("CONNECTION AUTHENTICATED - Server authenticated Client " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " <<
                         InetSocketAddress::ConvertFrom (from).GetPort () << "");
@@ -592,7 +592,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
         {
           if(find)
           {
-            std::cout<<"End 0RTT for Server"<<std::endl;
+            //std::cout<<"End 0RTT for Server"<<std::endl;
           }
           auto result = std::find (m_authAddresses.begin (), m_authAddresses.end (), InetSocketAddress::ConvertFrom (from).GetIpv4 ());
           // check if a 0-RTT is allowed with this endpoint - or if the attribute m_0RTTHandshakeStart has been forced to be true
@@ -646,8 +646,8 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
 
       if(found == true)
       {
-        std::cout<<"My Node ID: "<<m_node->GetId()<<std::endl;
-        std::cout<<"1787 Pakcet Recv from Port Num:" <<InetSocketAddress::ConvertFrom(from).GetPort()<<std::endl;
+        //std::cout<<"My Node ID: "<<m_node->GetId()<<std::endl;
+        //std::cout<<"1787 Pakcet Recv from Port Num:" <<InetSocketAddress::ConvertFrom(from).GetPort()<<std::endl;
       }
       
 
@@ -892,9 +892,9 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
   Ptr<Packet> packetSent = Create<Packet> ();
   
   packetSent->AddHeader (outgoing);
-  std::cout<<"Send Quic Header Packet Size: "<<packetSent->GetSize()<<std::endl;
+  //std::cout<<"Send Quic Header Packet Size: "<<packetSent->GetSize()<<std::endl;
   packetSent->AddAtEnd (pkt);
-  std::cout<<"Send Complete QUIC Packet Size: "<<packetSent->GetSize()<<std::endl;
+  //std::cout<<"Send Complete QUIC Packet Size: "<<packetSent->GetSize()<<std::endl;
 
 
   // NS_LOG_INFO ("" );
@@ -916,18 +916,18 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
             NS_ASSERT(0==1);
           }
 
-          std::cout<<"Quic Send Packet Num: "<<outgoing.GetPacketNumber()<<std::endl;
+          //std::cout<<"Quic Send Packet Num: "<<outgoing.GetPacketNumber()<<std::endl;
           if(outgoing.GetPacketNumber() == SequenceNumber32(1500))
           {
-            std::cout<<"Notice!!!!!!!!!!!!!!!! Send Packet Size: "<<packetSent->GetSize()<<std::endl;
-            std::cout<<"My Node ID: "<<m_node->GetId()<<std::endl;
-            std::cout<<"My Port Num: "<<socket->GetEndPoint()->GetLocalPort()<<std::endl;
-            std::cout<<"Send Time: "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+            //std::cout<<"Notice!!!!!!!!!!!!!!!! Send Packet Size: "<<packetSent->GetSize()<<std::endl;
+            //std::cout<<"My Node ID: "<<m_node->GetId()<<std::endl;
+            //std::cout<<"My Port Num: "<<socket->GetEndPoint()->GetLocalPort()<<std::endl;
+            //std::cout<<"Send Time: "<<Simulator::Now().GetMilliSeconds()<<std::endl;
           }
 
           if(error == -1)
           {
-            std::cout<<"udp send Error! Packet Size: "<<(int)packetSent->GetSize ()<<std::endl;
+            //std::cout<<"udp send Error! Packet Size: "<<(int)packetSent->GetSize ()<<std::endl;
             NS_ASSERT_MSG(0==1,"udp send Error!");
           }
           else{
@@ -952,7 +952,7 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
     }
   if(!sendSuccess)
   {
-    std::cout<<"Send Fail for socket "<<socket<<std::endl;
+    //std::cout<<"Send Fail for socket "<<socket<<std::endl;
   }
   
 }

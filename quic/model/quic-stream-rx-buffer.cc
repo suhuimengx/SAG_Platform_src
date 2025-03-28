@@ -130,7 +130,7 @@ QuicStreamRxBuffer::Add (Ptr<Packet> p, const QuicSubheader& sub)
             {
               if (item->m_offset == (*it)->m_offset)
                 {
-                  std::cout<<"Discarded duplicate packet."<<std::endl;
+                  //std::cout<<"Discarded duplicate packet."<<std::endl;
                   // Duplicate packet
                   NS_LOG_WARN ("Discarded duplicate packet.");
                   return false;
@@ -156,12 +156,12 @@ QuicStreamRxBuffer::Add (Ptr<Packet> p, const QuicSubheader& sub)
         }
       else
         {
-          std::cout<< "Discarded. Trying to insert empty packet."<<std::endl;
+          //std::cout<< "Discarded. Trying to insert empty packet."<<std::endl;
           NS_LOG_WARN ("Discarded. Trying to insert empty packet.");
           return false;
         }
     }
-  std::cout<< "Rejected. Not enough room to buffer packet." <<std::endl;
+  //std::cout<< "Rejected. Not enough room to buffer packet." <<std::endl;
   NS_LOG_WARN ("Rejected. Not enough room to buffer packet.");
   return false;
 }

@@ -316,7 +316,7 @@ void QuicSocketTxBuffer::CheckSentListLost()
   auto test = m_sentList.rbegin();
   if((*test)->m_lost == true)
   {
-    std::cout<<"What a Big Error!"<<std::endl;
+    //std::cout<<"What a Big Error!"<<std::endl;
   }
   else
   {
@@ -347,7 +347,7 @@ Ptr<Packet> QuicSocketTxBuffer::NextStream0Sequence (
       m_sentSize += outItem->m_packet->GetSize ();
       --m_numFrameStream0InBuffer;
       Ptr<Packet> toRet = outItem->m_packet;
-      std::cout<<"Remain Stream 0 Packet: "<<m_numFrameStream0InBuffer<<std::endl;
+      //std::cout<<"Remain Stream 0 Packet: "<<m_numFrameStream0InBuffer<<std::endl;
 
       CheckSentListLost();
       return toRet;
@@ -368,13 +368,13 @@ Ptr<Packet> QuicSocketTxBuffer::NextSequence (uint32_t numBytes,
       outItem->m_packetNumber = seq;
       outItem->m_lastSent = Now ();
       Ptr<Packet> toRet = outItem->m_packet;
-      std::cout<<"The Stream SubPacket Size: "<<toRet->GetSize()<<std::endl;
+      //std::cout<<"The Stream SubPacket Size: "<<toRet->GetSize()<<std::endl;
       //std::cout<<"NextSequence Packet Tags: ";
       //toRet->PrintPacketTags(std::cout);
       //std::cout<<std::endl;
       if(toRet->GetSize() > 40000)
       {
-        std::cout<<"QuicSocketTxBuffer OutItemSize: "<<toRet->GetSize()<<" NumBytes: "<<numBytes<<std::endl;  
+        //std::cout<<"QuicSocketTxBuffer OutItemSize: "<<toRet->GetSize()<<" NumBytes: "<<numBytes<<std::endl;  
       }
       return toRet;
     }
@@ -568,7 +568,7 @@ bool QuicSocketTxBuffer::MarkAsLost (const SequenceNumber32 seq)
       if ((*sent_it)->m_packetNumber == seq)
         {
           found = true;
-          std::cout<<"555"<<std::endl;
+          //std::cout<<"555"<<std::endl;
           (*sent_it)->m_lost = true;
         }
     }
@@ -612,7 +612,7 @@ uint32_t QuicSocketTxBuffer::Retransmission (SequenceNumber32 packetNumber)
           if (retx->m_isStream0)
             {
               NS_LOG_INFO ("Lost stream 0 packet, re-inserting in list");
-              std::cout<<"Lost stream 0 packet, re-inserting in list"<<std::endl;
+              //std::cout<<"Lost stream 0 packet, re-inserting in list"<<std::endl;
               m_streamZeroList.insert (m_streamZeroList.begin (), retx);
               m_streamZeroSize += retx->m_packet->GetSize ();
               //std::cout<<"Retrans Stream0 Packet!"<<std::endl;
@@ -662,7 +662,7 @@ uint32_t QuicSocketTxBuffer::Retransmission (SequenceNumber32 packetNumber)
 
   if(!erase)
   {
-    std::cout<<"Error: No Erase!"<<std::endl;
+    //std::cout<<"Error: No Erase!"<<std::endl;
     NS_ASSERT_MSG(0==1,"Error: No Erase!"); ;
   }
 
@@ -698,7 +698,7 @@ std::vector<Ptr<QuicSocketTxItem> > QuicSocketTxBuffer::GetAllHandshakePackets (
   for (auto sent_it = m_sentList.begin ();
        sent_it != m_sentList.end () and !m_sentList.empty (); ++sent_it)
     {
-      std::cout<<"777"<<std::endl;
+      //std::cout<<"777"<<std::endl;
       (*sent_it)->m_lost = true;
       pkts.push_back ((*sent_it));
     }

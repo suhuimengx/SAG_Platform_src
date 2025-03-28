@@ -487,7 +487,7 @@ QuicStreamBase::Recv (Ptr<Packet> frame, const QuicSubheader& sub, Address &addr
               NS_LOG_LOGIC ("Received window set to offset " << sub.GetMaxStreamData ());
             }
           NS_LOG_INFO ("Buffering unordered received frame - offset " << m_recvSize << ", frame offset " << sub.GetOffset ());
-          std::cout<<"My Available Buffer: "<<m_rxBuffer->Available()<<std::endl;
+          //std::cout<<"My Available Buffer: "<<m_rxBuffer->Available()<<std::endl;
           
           if (!m_rxBuffer->Add (frame, sub) && frame->GetSize () > 0)
             {

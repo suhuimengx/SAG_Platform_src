@@ -591,7 +591,7 @@ ScpsTpSocketBase::DoForwardUp (Ptr<Packet> packet, const Address &fromAddress,
 
       if(tcpHeader.HasOption (TcpOption::SCPSCAPABILITIES))
       {
-        std::cout << m_node->GetId()<<"Received SCPSCAPABILITIES" << std::endl;
+        //std::cout << m_node->GetId()<<"Received SCPSCAPABILITIES" << std::endl;
         Ptr<const ScpsOptionCapabilities> s = DynamicCast<const ScpsOptionCapabilities> (tcpHeader.GetOption (TcpOption::SCPSCAPABILITIES));
         if(m_snackEnabled)
         {
