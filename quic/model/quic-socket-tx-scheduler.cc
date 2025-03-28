@@ -156,6 +156,10 @@ QuicSocketTxScheduler::Add (Ptr<QuicSocketTxItem> item, bool retx)
   NS_LOG_FUNCTION (this << item);
   QuicSubheader qsb;
   item->m_packet->PeekHeader (qsb);
+  if(qsb.GetLength() == 25 && qsb.GetFrameType() == 22)
+  {
+    std::cout<<"Find This Packet! Size: "<<item->m_packet->GetSize()<<std::endl;
+  }
   double priority = -1;
   NS_LOG_INFO ("Adding packet on stream " << qsb.GetStreamId ());
   if (!retx)
@@ -224,6 +228,8 @@ QuicSocketTxScheduler::GetNewSegment (uint32_t numBytes)
           QuicSubheader qsb;
           currentPacket->PeekHeader (qsb);
           NS_LOG_INFO ("Packet: stream " << qsb.GetStreamId () << ", offset " << qsb.GetOffset ());
+          std::cout<<"Add Data Stream At End, Type: "<<(int)qsb.GetFrameType()<<"; Size: "<<qsb.GetLength()<<"QuicSubHeader Size: "<<qsb.GetSerializedSize()<<std::endl;
+          std::cout<<"Packet Size: "<<currentPacket->GetSize()<<std::endl;
           QuicSocketTxItem::MergeItems (*outItem, *currentItem);
           outItemSize += currentItem->m_packet->GetSize ();
 
@@ -297,6 +303,7 @@ QuicSocketTxScheduler::GetNewSegment (uint32_t numBytes)
               toBeBuffered->m_packet = secondPartPacket;
               currentItem->m_packet = firstPartPacket;
 
+              std::cout<<"Add Data Stream At End, Type: "<<(int)newQsbToTx.GetFrameType()<<"; Size: "<<newQsbToTx.GetLength()<<"; SubHeader Size:"<<(int)newQsbToTx.GetSerializedSize()<<std::endl;
               QuicSocketTxItem::MergeItems (*outItem, *currentItem);
               outItemSize += currentItem->m_packet->GetSize ();
 
@@ -316,7 +323,7 @@ QuicSocketTxScheduler::GetNewSegment (uint32_t numBytes)
   //Print(std::cout);
   if(outItem->m_packet->GetSize() > 40000)
   {
-    std::cout<<"OutItemSize: "<<outItem->m_packet->GetSize()<<" NumBytes: "<<numBytes<<std::endl;  
+    //std::cout<<"OutItemSize: "<<outItem->m_packet->GetSize()<<" NumBytes: "<<numBytes<<std::endl;  
   }
 
   return outItem;

@@ -1156,13 +1156,6 @@ QuicSocketBase::SendPendingData (bool withAck)
 
        //uint32_t sz =
       SendDataPacket (next, s, withAck);
-      if (find)
-      {
-        //std::cout<<"CLT Send Data"<<sz<<std::endl;
-      }
-      {
-        /* code */
-      }
       
 
       win = AvailableWindow ();
@@ -1202,8 +1195,8 @@ QuicSocketBase::SetSegSize (uint32_t size)
   m_tcb->m_segmentSize = size;
   // Update minimum congestion window
   //Mengy's::
-  m_tcb->m_initialCWnd = 20 * size;
-  m_tcb->m_kMinimumWindow = 20 * size;
+  m_tcb->m_initialCWnd = 400 * size;
+  m_tcb->m_kMinimumWindow = 400 * size;
 }
 
 uint32_t
@@ -1360,11 +1353,9 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
 {
   NS_LOG_FUNCTION (this << packetNumber << maxSize << withAck);
 
+  std::cout<<"-----------------Start-Build-Packet-----------------"<<std::endl;
+
   //Mengy's::
-  if(maxSize > 40000)
-  {
-    maxSize = 40000;
-  }
 
   if (!m_drainingPeriodEvent.IsRunning ())
     {
@@ -1385,6 +1376,11 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
   if (m_txBuffer->GetNumFrameStream0InBuffer () > 0  )
     {
       p = m_txBuffer->NextStream0Sequence (packetNumber);
+      std::cout<<"Add Stream 0 Packet At End:"<<p->GetSize ()<<std::endl;
+      QuicSubheader qsb;
+      p->PeekHeader(qsb);
+      std::cout<<"SubHeaderType: "<<(int)qsb.GetFrameType()<<std::endl;
+      std::cout<<"Frame Len: "<<(int)qsb.GetLength()<<std::endl;
 
       if(p->GetSize () > 40000)
       {
@@ -1398,7 +1394,7 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
         }
       }
       //std::cout<<"Send Stream 0"<<std::endl;
-      m_txBuffer->CheckSentListLost();
+      //m_txBuffer->CheckSentListLost();
       NS_ABORT_MSG_IF (p == 0, "No packet for stream 0 in the buffer!");
     }
   else
@@ -1408,10 +1404,11 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
       m_idleTimeoutEvent = Simulator::Schedule (m_idleTimeout,
                                                 &QuicSocketBase::Close, this);
       p = m_txBuffer->NextSequence (maxSize, packetNumber);
+      std::cout<<"Add Total Stream Packet Size At End:"<<p->GetSize ()<<std::endl;
 
       if(p->GetSize () > 40000)
       {
-        std::cout<<"Packet Size is "<<p->GetSize ()<<std::endl;
+        //std::cout<<"Packet Size is "<<p->GetSize ()<<std::endl;
       }
 
         //Mengy's::TODO
@@ -1447,7 +1444,7 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
       m_tcb->m_appLimitedUntil = m_tcb->m_delivered + m_tcb->m_bytesInFlight.Get () ? : 1U;
     }
 
-    m_txBuffer->CheckSentListLost();
+    //m_txBuffer->CheckSentListLost();
 
   // perform pacing
   if (m_tcb->m_pacing)
@@ -1472,13 +1469,14 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
   if (withAck && !m_receivedPacketNumbers.empty ())
     {
       //Mengy's::
-      if(sz < 40000)
+      if(!m_quicl4->IsServer())
       {
-        p->AddAtEndForQuicACK (OnSendingAckFrame ());
+       // p->AddAtEndForQuicACK (OnSendingAckFrame ());
+        std::cout<<"Add ACK Packet At End:"<<(int)p->GetSize ()-(int)sz<<std::endl;
       }
     }
 
-    m_txBuffer->CheckSentListLost();
+   // m_txBuffer->CheckSentListLost();
 
 
   //std::cout<<"AddAck Socketbase Packet Tags: ";
@@ -1530,17 +1528,14 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
 
   NS_LOG_INFO ("SendDataPacket of size " << p->GetSize ());
 
-  m_txBuffer->CheckSentListLost();
+  std::cout<<"-----------------End-Build-Packet-----------------"<<std::endl;
 
   m_quicl4->SendPacket (this, p, head);
   m_txTrace (p, head, this);
   NotifyDataSent (sz);
 
-  m_txBuffer->CheckSentListLost();
 
   m_txBuffer->UpdatePacketSent (packetNumber, sz);
-
-  m_txBuffer->CheckSentListLost();
 
 
   if (!m_quicCongestionControlLegacy)
@@ -1553,7 +1548,6 @@ QuicSocketBase::SendDataPacket (SequenceNumber32 packetNumber,
       SetReTxTimeout ();
     }
 
-  m_txBuffer->CheckSentListLost();
 
   return sz;
 }
@@ -1653,9 +1647,6 @@ QuicSocketBase::DoRetransmit (std::vector<Ptr<QuicSocketTxItem> > lostPackets)
         }
       }
   }
-  std::cout<<"Lost Stream 0 Num: "<<stream0LostNum<<std::endl;
-  m_txBuffer->CheckSentListLost();
-  //std::cout<<"Retrans Packet Num "<<lostPackets.size()<<std::endl;
 
 
   SequenceNumber32 next = ++m_tcb->m_nextTxSequence;
@@ -2437,6 +2428,8 @@ QuicSocketBase::OnSendingAckFrame ()
     gaps, additionalAckBlocks);
 
   Ptr<Packet> ackFrame = Create<Packet> ();
+  std::cout<<"Add ACK Frame, Frame Type: "<<(int)sub.GetFrameType()<<std::endl;
+  std::cout<<"ACK Frame Size (including subheader): "<<sub.GetSerializedSize()<<std::endl;
   ackFrame->AddHeader (sub);
 
   if (m_lastMaxData < m_maxDataInterval)
@@ -2446,6 +2439,8 @@ QuicSocketBase::OnSendingAckFrame ()
   else
     {
       QuicSubheader maxData = QuicSubheader::CreateMaxData (m_quicl5->GetMaxData ());
+      std::cout<<"Add MAX_DATA Frame, Frame Type: "<<(int)maxData.GetFrameType()<<std::endl;
+      std::cout<<"MAX_DATA Frame Size (including subheader): "<<maxData.GetSerializedSize()<<std::endl;
       ackFrame->AddHeader (maxData);
       m_lastMaxData = 0;
     }
@@ -2830,7 +2825,7 @@ QuicSocketBase::DoClose (void)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO (this << " DoClose at time " << Simulator::Now ().GetSeconds ());
-
+  std::cout<<"DoClose at time " << Simulator::Now ().GetSeconds ()<<std::endl;
   bool find = false;
   if(m_quicl4->GetNode()->GetId() == 1589 && m_connectionId == 0)
   {
@@ -2867,17 +2862,6 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
 
   m_rxTrace (p, quicHeader, this);
 
-  bool find = false;
-  if(m_quicl4->GetNode()->GetId() == 1589 && m_connectionId == 0)
-  {
-    find = true;
-    if(find)
-    {
-      //std::cout<<"Quic Socket "<<m_connectionId<<" Received Data "<<p->GetSize ()<<" at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
-    }
-  }
-
-
 
   //std::cout<<"Quic Socket "<<m_connectionId<<" Received Data "<<p->GetSize ()<<" at Time "<<Simulator::Now().GetMilliSeconds()<<std::endl;
 
@@ -2895,10 +2879,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
     }
   else   // If the socket is in Draining Period, discard the packets
     {
-      if(find)
-      {
-        //std::cout<<"Error Return"<<std::endl;
-      }
+
       return;
     }
 
@@ -2907,11 +2888,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
 
   if (quicHeader.IsORTT () and m_socketState == LISTENING)
     {
-      if(find)
-      {
-        std::cout<<"0-Rtt>>>"<<std::endl;
-      }
-
+      std::cout<<"Server receives 0RTT"<<std::endl;
       if (m_serverBusy)
         {
           AbortConnection (QuicSubheader::TransportErrorCodes_t::SERVER_BUSY,
@@ -2939,6 +2916,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
   else if (quicHeader.IsInitial () and m_socketState == CONNECTING_SVR)
     {
       NS_LOG_INFO ("Server receives INITIAL");
+      std::cout<<"Server receives INITIAL"<<std::endl;
       //std::cout<<"Server receives INITIAL"<<std::endl;
       if (m_serverBusy)
         {
@@ -2978,6 +2956,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
   else if (quicHeader.IsHandshake () and m_socketState == CONNECTING_CLT)   // Undefined compiler behaviour if i try to receive transport parameters
     {
       NS_LOG_INFO ("Client receives HANDSHAKE");
+      std::cout<<"Client receives HANDSHAKE"<<std::endl;
 
       onlyAckFrames = m_quicl5->DispatchRecv (p, address);
       m_receivedPacketNumbers.push_back (quicHeader.GetPacketNumber ());
@@ -2994,10 +2973,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
   else if (quicHeader.IsHandshake () and m_socketState == CONNECTING_SVR)
     {
       NS_LOG_INFO ("Server receives HANDSHAKE");
-      if(find)
-      {
-        std::cout<<"Server receives HANDSHAKE"<<std::endl;
-      }
+      std::cout<<"Server receives HANDSHAKE"<<std::endl;
 
       onlyAckFrames = m_quicl5->DispatchRecv (p, address);
       m_receivedPacketNumbers.push_back (quicHeader.GetPacketNumber ());
@@ -3013,6 +2989,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
            and m_socketState == CONNECTING_CLT)
     {
       NS_LOG_INFO ("Client receives VERSION_NEGOTIATION");
+      std::cout<<"Client receives VERSION_NEGOTIATION"<<std::endl;
 
       uint8_t *buffer = new uint8_t[p->GetSize ()];
       p->CopyData (buffer, p->GetSize ());
@@ -3065,18 +3042,12 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
       // we need to check if the packet contains only an ACK frame
       // in this case we cannot explicitely ACK it!
       // check if delayed ACK is used
+      std::cout<<"Short Packet Received! Packet Num: "<<quicHeader.GetPacketNumber ()<<std::endl;
+      std::cout<<"My Node ID: "<<m_node->GetId ()<<"; Port Num: "<<InetSocketAddress::ConvertFrom (address).GetPort ()<<std::endl;
       m_receivedPacketNumbers.push_back (quicHeader.GetPacketNumber ());
+      std::cout<<"----------Start-Dispatch-SubHeader------------"<<std::endl;
       onlyAckFrames = m_quicl5->DispatchRecv (p, address);
-      if(find)
-      {
-        if(onlyAckFrames)
-        {
-          //std::cout<<"Short Packet with only ACK Frame!"<<std::endl;
-        }
-        else{
-          //std::cout<<"Short Packet with Data!"<<std::endl;
-        }
-      }
+      std::cout<<"----------End-Dispatch-SubHeader------------"<<std::endl;
 
     }
   else if (m_socketState == CLOSING)
@@ -3088,10 +3059,7 @@ QuicSocketBase::ReceivedData (Ptr<Packet> p, const QuicHeader& quicHeader,
     }
   else
     {
-      if(find)
-      {
-        std::cout<<"Error: Received packet in unfeasible state"<<std::endl;
-      }
+      std::cout<<"Error: Received packet in unfeasible state"<<std::endl;
       return;
     }
 

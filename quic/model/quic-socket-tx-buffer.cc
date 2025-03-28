@@ -368,6 +368,7 @@ Ptr<Packet> QuicSocketTxBuffer::NextSequence (uint32_t numBytes,
       outItem->m_packetNumber = seq;
       outItem->m_lastSent = Now ();
       Ptr<Packet> toRet = outItem->m_packet;
+      std::cout<<"The Stream SubPacket Size: "<<toRet->GetSize()<<std::endl;
       //std::cout<<"NextSequence Packet Tags: ";
       //toRet->PrintPacketTags(std::cout);
       //std::cout<<std::endl;
@@ -390,11 +391,6 @@ Ptr<QuicSocketTxItem> QuicSocketTxBuffer::GetNewSegment (uint32_t numBytes)
   NS_LOG_FUNCTION (this << numBytes);
 
   Ptr<QuicSocketTxItem> outItem = m_scheduler->GetNewSegment (numBytes);
-
-  if(outItem -> m_packet -> GetSize() > 40000)
-  {
-    std::cout<<"QuicSocketTxBuffer::GetNewSegment OutItemSize: "<<outItem->m_packet->GetSize()<<" NumBytes: "<<numBytes<<std::endl;  
-  }
 
   if (outItem->m_packet->GetSize () > 0)
     {
@@ -626,6 +622,7 @@ uint32_t QuicSocketTxBuffer::Retransmission (SequenceNumber32 packetNumber)
             {
               m_scheduler->Add (retx, true);
             }
+          //Mengy's::
           break;
         }
     }

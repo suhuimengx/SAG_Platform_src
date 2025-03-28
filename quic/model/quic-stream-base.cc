@@ -494,7 +494,7 @@ QuicStreamBase::Recv (Ptr<Packet> frame, const QuicSubheader& sub, Address &addr
               // Insert failed: No data or RX buffer full
               NS_LOG_INFO ("Dropping packet due to full RX buffer");
               // Abort simulation!
-              NS_ABORT_MSG ("Buffer is Full! Aborting Connection");
+              //NS_ABORT_MSG ("Buffer is Full! Aborting Connection");
             }
         }
 

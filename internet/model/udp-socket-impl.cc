@@ -861,6 +861,10 @@ UdpSocketImpl::RecvFrom (uint32_t maxSize, uint32_t flags,
     {
       p = 0;
     }
+  std::cout<<"Max Size: "<<maxSize<<std::endl;
+  std::cout<<"UDP Socket Recv Packet Size: "<<p->GetSize()<<std::endl;
+  std::cout<<"From Port: "<<InetSocketAddress::ConvertFrom(fromAddress).GetPort()<<std::endl;
+  std::cout<<"From Ipv4: "<<InetSocketAddress::ConvertFrom(fromAddress).GetIpv4()<<std::endl;
   return p;
 }
 

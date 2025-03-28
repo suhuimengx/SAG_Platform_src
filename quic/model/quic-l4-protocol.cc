@@ -469,9 +469,17 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
       //std::cout<<"Start Print Tag!"<<std::endl;
       //packet->PrintPacketTags (std::cout);
 
-
+      std::cout<<"Recv Time: "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+      std::cout<<"Origin Recv Packet Size: "<<packet->GetSize()<<std::endl;
       QuicHeader header;
       packet->RemoveHeader (header);
+      std::cout<<"Quic Header Num: "<<header.GetPacketNumber()<<std::endl;
+      bool found = false;
+      if(header.GetPacketNumber() == SequenceNumber32(1787))
+      {
+        found = true;
+      }
+      std::cout<<"Quic Header Removed Recv Packet Size: "<<packet->GetSize()<<std::endl;
 
       bool find =false;
       if(m_isServer)
@@ -479,6 +487,7 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
         #if 1
         std::string filePath = "/home/liyisen/tarballs/SAG_Platform/data/test_data/logs_ns3/QuicL4Recv_"
         + std::to_string(m_node->GetId()) +"_" + std::to_string(InetSocketAddress::ConvertFrom(from).GetPort()) + ".txt";
+        //std::cout<<m_node->GetId()<<"_"<<InetSocketAddress::ConvertFrom(from).GetPort()<<"Recv Packet Size:"<<packet->GetSize()<<std::endl;
         std::ofstream file(filePath, std::ios::app);
         if(file.is_open()){
             file << (int)packet->GetSize() << ","<<Simulator::Now().GetMilliSeconds() << std::endl;
@@ -620,9 +629,26 @@ QuicL4Protocol::ForwardUp (Ptr<Socket> sock)
             {
               NS_LOG_WARN ( this << " CONNECTION ABORTED: Short Packet from unauthenticated address " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " <<
                             InetSocketAddress::ConvertFrom (from).GetPort ());
+              //Mengy's::
+              if((int)InetSocketAddress::ConvertFrom (from).GetPort ()< 3026)
+              {
+                NS_ASSERT_MSG(0 == 1, "Short Packet from unauthenticated address");
+                continue;
+              }
               //continue;
             }
         }
+      else{
+        //Mengy's::
+        //std::cout<<"maybe incorrect!"<<std::endl;
+        //return;
+      }
+
+      if(found == true)
+      {
+        std::cout<<"My Node ID: "<<m_node->GetId()<<std::endl;
+        std::cout<<"1787 Pakcet Recv from Port Num:" <<InetSocketAddress::ConvertFrom(from).GetPort()<<std::endl;
+      }
       
 
       // Handle callback for the correct socket
@@ -864,8 +890,13 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
   // we create a new packet, add the new QUIC header and
   // then add pkt as payload
   Ptr<Packet> packetSent = Create<Packet> ();
+  
   packetSent->AddHeader (outgoing);
+  std::cout<<"Send Quic Header Packet Size: "<<packetSent->GetSize()<<std::endl;
   packetSent->AddAtEnd (pkt);
+  std::cout<<"Send Complete QUIC Packet Size: "<<packetSent->GetSize()<<std::endl;
+
+
   // NS_LOG_INFO ("" );
   //packetSent->Print (std::clog);
   // NS_LOG_INFO ("");
@@ -879,6 +910,20 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
       if (item->m_quicSocket == socket)
         {
           int error = UdpSend (item->m_budpSocket, packetSent, 0);
+
+          if(error != (int)packetSent->GetSize())
+          {
+            NS_ASSERT(0==1);
+          }
+
+          std::cout<<"Quic Send Packet Num: "<<outgoing.GetPacketNumber()<<std::endl;
+          if(outgoing.GetPacketNumber() == SequenceNumber32(1500))
+          {
+            std::cout<<"Notice!!!!!!!!!!!!!!!! Send Packet Size: "<<packetSent->GetSize()<<std::endl;
+            std::cout<<"My Node ID: "<<m_node->GetId()<<std::endl;
+            std::cout<<"My Port Num: "<<socket->GetEndPoint()->GetLocalPort()<<std::endl;
+            std::cout<<"Send Time: "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+          }
 
           if(error == -1)
           {
@@ -896,6 +941,7 @@ QuicL4Protocol::SendPacket (Ptr<QuicSocketBase> socket, Ptr<Packet> pkt, const Q
                   file << (int)packetSent->GetSize() << ","<<Simulator::Now().GetMilliSeconds() << std::endl;
                   file.close();
               }
+              //std::cout<<m_node->GetId()<<"_"<<socket->GetEndPoint()->GetLocalPort()<<" Send Packet Size: "<<packetSent->GetSize()<<std::endl;
               #endif
 
             }
