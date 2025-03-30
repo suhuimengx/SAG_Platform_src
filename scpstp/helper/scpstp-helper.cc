@@ -37,7 +37,7 @@ ScpsTpHelper::InstallScpsTp (std::string nodeName) const
 void 
 ScpsTpHelper::InstallAllScpsTp (void) const
 {
-  Install (NodeContainer::GetGlobal ());
+  InstallScpsTp (NodeContainer::GetGlobal ());
 }
 
 void

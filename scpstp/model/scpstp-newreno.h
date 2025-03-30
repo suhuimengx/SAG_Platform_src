@@ -8,11 +8,13 @@
 namespace ns3 {
 
 /**
- * \brief The NewReno implementation
+ * \brief The NewReno implementation with enhancements for delay ACK handling
  *
- * New Reno introduces partial ACKs inside the well-established Reno algorithm.
- * This and other modifications are described in RFC 6582.
+ * The class builds upon the well-established Reno algorithm and incorporates
+ * partial ACK handling as described in RFC 6582, while also introducing
+ * improvements tailored for delay ACK scenarios.
  *
+ * \see TcpCongestionOps
  * \see IncreaseWindow
  */
 class ScpsTpNewReno : public TcpCongestionOps

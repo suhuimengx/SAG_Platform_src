@@ -52,6 +52,13 @@ public:
 
   virtual ~ScpsTpTxBuffer (void);
 
+  /**
+   * \brief Update the snack list
+   * \param sackListCopy the sack list
+   * 
+   * This function is called by the ScpsTpSocketBase::ReceivedAck function.
+   * It updates the snack list according to the sack list.
+   */
   virtual void UpdateSnackedData (const ScpsTpOptionSnack::SnackList &snackList);
 
 

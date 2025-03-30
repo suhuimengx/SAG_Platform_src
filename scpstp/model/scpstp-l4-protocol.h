@@ -54,8 +54,7 @@ class NetDevice;
  * is done through the SendPacket function, which sends the packet down the stack.
  *
  * Moreover, this class allocates "endpoint" objects (ns3::Ipv4EndPoint) for SCPS-TP.
- * Unlike standard TCP, SCPS-TP is designed for challenging network environments,
- * incorporating mechanisms to handle congestion, corruption, and link outages.
+ * Unlike standard TCP, SCPS-TP is designed for challenging network environments.
  * 
  * \see CreateSocket
  * \see NotifyNewAggregate
@@ -84,7 +83,7 @@ public:
   /**
    * \brief Create a SCPS-TP socket using the TypeId set by SocketType attribute
    *
-   * \return A smart Socket pointer to a TcpSocket allocated by this instance
+   * \return A smart Socket pointer to a ScpsTpSocket allocated by this instance
    * of the SCPS-TP protocol
    */
   Ptr<Socket> CreateSocket (void);
@@ -92,7 +91,7 @@ public:
   /**
    * \brief Create a SCPS-TP socket using the specified congestion control algorithm TypeId
    *
-   * \return A smart Socket pointer to a TcpSocket allocated by this instance
+   * \return A smart Socket pointer to a ScpsTpSocket allocated by this instance
    * of the SCPS-TP protocol
    *
    * \warning using a congestionTypeId other than SCPS-TP is a bad idea.
@@ -104,7 +103,7 @@ public:
 
   /**
     * \brief Create a SCPS-TP socket using the specified congestion control algorithm
-    * \return A smart Socket pointer to a TcpSocket allocated by this instance
+    * \return A smart Socket pointer to a ScpsTpSocket allocated by this instance
     * of the SCPS-TP protocol
     *
     * \param congestionTypeId the congestion control algorithm TypeId

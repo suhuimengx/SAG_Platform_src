@@ -2734,6 +2734,11 @@ ScpsTpSocketBase::ReadOptions (const TcpHeader &tcpHeader, uint32_t *bytesSacked
             {
               SequenceNumber32 startSeq = i->first;
               SequenceNumber32 endSeq = i->second;
+              if (static_cast<uint32_t>(endSeq - startSeq) > 100 * m_tcb->m_segmentSize) 
+              {
+                  NS_LOG_INFO("too many data to be retransmitted, maybe wrong, ignore it");
+                  continue;
+              }
               uint32_t maxSizeToSend;
               //将startSeq到endSeq的数据立即重传
               for(SequenceNumber32 seq = startSeq; seq < endSeq && maxSnackRetrnsNum != 0; seq += m_tcb->m_segmentSize)
