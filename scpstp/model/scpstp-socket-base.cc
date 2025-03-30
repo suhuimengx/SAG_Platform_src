@@ -1042,7 +1042,7 @@ ScpsTpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool w
     }
   
   if (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_RCVD && m_ecnEchoSeq.Get() > m_ecnCWRSeq.Get ())
-    {//为了配合ScpsTp及时调整状态，重传包也允许发送CWR标志
+    {
       NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_CWR_SENT");
       m_tcb->m_ecnState = TcpSocketState::ECN_CWR_SENT;
       // 对ECN的响应已经结束，lossType回到正常状态
@@ -2735,6 +2735,12 @@ ScpsTpSocketBase::ReadOptions (const TcpHeader &tcpHeader, uint32_t *bytesSacked
               SequenceNumber32 startSeq = i->first;
               SequenceNumber32 endSeq = i->second;
               uint32_t maxSizeToSend;
+              if(static_cast<uint32_t> (endSeq - startSeq) > 100 * m_tcb->m_segmentSize)
+              {
+                
+                NS_LOG_INFO("too much data to retransmit, maybe wrong, ignore it");
+                continue;
+              }
               //将startSeq到endSeq的数据立即重传
               for(SequenceNumber32 seq = startSeq; seq < endSeq && maxSnackRetrnsNum != 0; seq += m_tcb->m_segmentSize)
               {
