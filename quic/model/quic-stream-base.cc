@@ -487,14 +487,14 @@ QuicStreamBase::Recv (Ptr<Packet> frame, const QuicSubheader& sub, Address &addr
               NS_LOG_LOGIC ("Received window set to offset " << sub.GetMaxStreamData ());
             }
           NS_LOG_INFO ("Buffering unordered received frame - offset " << m_recvSize << ", frame offset " << sub.GetOffset ());
-          std::cout<<"My Available Buffer: "<<m_rxBuffer->Available()<<std::endl;
+          //std::cout<<"My Available Buffer: "<<m_rxBuffer->Available()<<std::endl;
           
           if (!m_rxBuffer->Add (frame, sub) && frame->GetSize () > 0)
             {
               // Insert failed: No data or RX buffer full
               NS_LOG_INFO ("Dropping packet due to full RX buffer");
               // Abort simulation!
-              NS_ABORT_MSG ("Buffer is Full! Aborting Connection");
+              //NS_ABORT_MSG ("Buffer is Full! Aborting Connection");
             }
         }
 

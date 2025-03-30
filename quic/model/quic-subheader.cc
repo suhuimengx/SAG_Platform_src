@@ -153,6 +153,11 @@ uint32_t
 QuicSubheader::CalculateSubHeaderLength () const
 {
   NS_LOG_FUNCTION (this);
+  if(!(m_frameType >= PADDING and m_frameType <= STREAM111))
+  {
+    //std::cout << "CalculateSubHeaderLength Invalid frame type" <<(int) m_frameType<<std::endl;
+  }
+
   NS_ASSERT (m_frameType >= PADDING and m_frameType <= STREAM111);
   uint32_t len = 8;
 
@@ -322,6 +327,13 @@ void
 QuicSubheader::Serialize (Buffer::Iterator start) const
 {
   NS_LOG_FUNCTION (this << (uint64_t)m_frameType);
+  //std::cout<<"**********************************"<<std::endl;
+
+  if(!(m_frameType >= PADDING and m_frameType <= STREAM111))
+  {
+    //std::cout << "Serialize Invalid frame type" <<(int) m_frameType<<std::endl;
+  }
+
   NS_ASSERT (m_frameType >= PADDING and m_frameType <= STREAM111);
 
   Buffer::Iterator i = start;
@@ -486,6 +498,7 @@ QuicSubheader::Serialize (Buffer::Iterator start) const
         break;
 
     }
+  //std::cout<<"******************End-of-Serialize-QuicSubHeader****************"<<std::endl;
 }
 
 uint32_t
@@ -495,6 +508,11 @@ QuicSubheader::Deserialize (Buffer::Iterator start)
   m_frameType = i.ReadU8 ();
 
   NS_LOG_FUNCTION (this << (uint64_t)m_frameType);
+
+  if(!(m_frameType >= PADDING and m_frameType <= STREAM111))
+  {
+    //std::cout << "Deserialize Invalid frame type" <<(int) m_frameType<<std::endl;
+  }
 
   NS_ASSERT (m_frameType >= PADDING and m_frameType <= STREAM111);
 
@@ -666,6 +684,9 @@ void
 QuicSubheader::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this << (uint64_t) m_frameType);
+
+  
+
   NS_ASSERT (m_frameType >= PADDING and m_frameType <= STREAM111);
 
   os << "|" << FrameTypeToString () << "|\n";
@@ -908,6 +929,7 @@ QuicSubheader::WriteVarInt64 (Buffer::Iterator& i, uint64_t varInt64) const
     }
   else
     {
+      //std::cout << "WriteVarInt64 - Error too much large" << std::endl;
       return;           // Error too much large
     }
 

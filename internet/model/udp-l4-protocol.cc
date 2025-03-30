@@ -452,6 +452,7 @@ UdpL4Protocol::Send (Ptr<Packet> packet,
     }
   udpHeader.SetDestinationPort (dport);
   udpHeader.SetSourcePort (sport);
+  //std::cout<<"UDP Really Send Size: "<<packet->GetSize()<<std::endl;
 
   packet->AddHeader (udpHeader);
 

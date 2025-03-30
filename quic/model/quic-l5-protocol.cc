@@ -225,7 +225,7 @@ QuicL5Protocol::DispatchSend (Ptr<Packet> data, uint64_t streamId)
 
   if(streamId == 0)
     {
-      std::cout<<"Append Stream 0 Data At Time "<<Simulator::Now().GetSeconds()<<std::endl;
+      //std::cout<<"Append Stream 0 Data At Time "<<Simulator::Now().GetSeconds()<<std::endl;
     }
 
   if (stream->GetStreamDirectionType () == QuicStream::SENDER
@@ -267,6 +267,7 @@ QuicL5Protocol::DispatchRecv (Ptr<Packet> data, Address &address)
 
       if (sub.GetStreamId () > currStreamNum)
         {
+          //std::cout<<"Stream ID Error! "<<sub.GetStreamId()<<" "<<currStreamNum<<std::endl;
           currStreamNum = sub.GetStreamId ();
         }
     }
@@ -291,6 +292,7 @@ QuicL5Protocol::DispatchRecv (Ptr<Packet> data, Address &address)
               NS_LOG_INFO (
                 "Receiving frame on stream " << stream->GetStreamId () <<
                   " trigger stream");
+              //std::cout<<"Recv Stream "<<stream->GetStreamId()<<" Data At Time "<<Simulator::Now().GetSeconds()<<std::endl;
               stream->Recv ((*it).first, sub, address);
             }
         }
@@ -299,6 +301,7 @@ QuicL5Protocol::DispatchRecv (Ptr<Packet> data, Address &address)
           NS_LOG_INFO (
             "Receiving frame on stream " << sub.GetStreamId () <<
               " trigger socket");
+          //std::cout<<"Receiving frame on streamm "<<sub.GetStreamId()<<" Data At Time "<<Simulator::Now().GetSeconds()<<std::endl;
           m_socket->OnReceivedFrame (sub);
         }
     }
@@ -369,6 +372,7 @@ QuicL5Protocol::DisgregateRecv (Ptr<Packet> data)
   uint32_t dataSizeByte = data->GetSize ();
   std::vector< std::pair<Ptr<Packet>, QuicSubheader> > disgregated;
   NS_LOG_INFO ("DisgregateRecv for a packet with size " << dataSizeByte);
+  //std::cout<<"DisgregateRecv for a packet with size " << dataSizeByte<<std::endl;
   //data->Print(std::cout);
 
   // the packet could contain multiple frames
@@ -378,18 +382,22 @@ QuicL5Protocol::DisgregateRecv (Ptr<Packet> data)
     {
       QuicSubheader sub;
       data->RemoveHeader (sub);
+
+      //std::cout<<"Got Subheader---Type: "<<(int)sub.GetFrameType()<<", Frame Size: "<<sub.GetLength ()<<", SubHeader Size:"<<(int)sub.GetSerializedSize()<<std::endl;
+
       NS_LOG_INFO ("subheader " << sub << " dataSizeByte " << dataSizeByte
                                 << " remaining " << data->GetSize () << " frame size " << sub.GetLength ());
       Ptr<Packet> remainingfragment = data->CreateFragment (0, sub.GetLength ());
       NS_LOG_INFO ("fragment size " << remainingfragment->GetSize ());
+      data->RemoveAtStart (sub.GetLength ());
 
       // remove the first portion of the packet
-      data->RemoveAtStart (sub.GetLength ());
       start += sub.GetSerializedSize () + sub.GetLength ();
       disgregated.push_back (std::make_pair (remainingfragment, sub));
+      //std::cout<<"Remain Data Size: "<<(int)data->GetSize ()<<std::endl;
     }
 
-
+  //std::cout<<"Disgregated Finish!"<<std::endl;
   return disgregated;
 }
 
